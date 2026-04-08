@@ -9,6 +9,8 @@ const VALID_FUEL_TYPES = new Set<string>([
   "petrol", "diesel", "electric", "hybrid", "lpg", "cng",
 ]);
 
+const MAX_MILEAGE = 9999999;
+
 export async function createVehicle(
   _prevState: { error: string | null },
   formData: FormData,
@@ -26,12 +28,13 @@ export async function createVehicle(
 
   const year = parseInt(yearStr, 10);
   const currentMileage = parseInt(mileageStr, 10);
+  const maxYear = new Date().getFullYear() + 1;
 
-  if (isNaN(year) || year < 1900 || year > 2100) {
+  if (isNaN(year) || year < 1900 || year > maxYear) {
     return { error: "Bitte ein gültiges Baujahr eingeben." };
   }
 
-  if (isNaN(currentMileage) || currentMileage < 0) {
+  if (isNaN(currentMileage) || currentMileage < 0 || currentMileage > MAX_MILEAGE) {
     return { error: "Bitte einen gültigen Kilometerstand eingeben." };
   }
 

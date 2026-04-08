@@ -4,7 +4,7 @@ import { canAddVehicle } from "@/lib/utils";
 import type { Vehicle, UserProfile } from "@/types/domain";
 
 export const metadata = {
-  title: "Fahrzeuge — Smart Car Manager",
+  title: "Fahrzeuge — CarMan",
 };
 
 export default async function VehiclesPage() {
@@ -31,30 +31,39 @@ export default async function VehiclesPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Fahrzeuge</h1>
-        {canAdd ? (
-          <Link
-            href="/vehicles/new"
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-          >
-            Neues Fahrzeug
-          </Link>
-        ) : (
-          <div className="text-right">
-            <span className="rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-700 dark:bg-amber-900/30 dark:text-amber-400">
-              Fahrzeuglimit erreicht — upgrade auf Pro
-            </span>
+      <section className="section-shell p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Fahrzeuge</p>
+            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Dein Fahrzeugbestand</h1>
+            <p className="mt-2 max-w-2xl text-sm help-copy">Lege fuer jedes Fahrzeug ein eigenes Profil an. Danach kannst du Kosten und Erinnerungen direkt zuordnen.</p>
           </div>
-        )}
+          {canAdd ? (
+            <Link
+              href="/vehicles/new"
+              className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
+            >
+              Neues Fahrzeug
+            </Link>
+          ) : (
+            <div className="rounded-xl border border-amber-300/50 bg-amber-100/65 px-3 py-2 text-sm text-amber-800">
+              Fahrzeuglimit erreicht, Pro fuer mehr Fahrzeuge
+            </div>
+          )}
+        </div>
+      </section>
+
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-foreground">Fahrzeugkarten</h2>
+        <p className="text-xs text-muted">Tippe auf eine Karte fuer Details, Kosten und Erinnerungen.</p>
       </div>
 
       {allVehicles.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-foreground/20 p-8 text-center">
-          <p className="text-foreground/60">Noch keine Fahrzeuge vorhanden.</p>
+        <div className="section-shell border-dashed p-8 text-center">
+          <p className="text-muted">Noch keine Fahrzeuge vorhanden.</p>
           <Link
             href="/vehicles/new"
-            className="mt-3 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="mt-3 inline-block rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
           >
             Erstes Fahrzeug hinzufügen
           </Link>
@@ -65,15 +74,15 @@ export default async function VehiclesPage() {
             <Link
               key={v.id}
               href={`/vehicles/${v.id}`}
-              className="block rounded-lg border border-foreground/10 p-4 transition-colors hover:bg-foreground/5"
+              className="surface block rounded-2xl p-4 transition-all hover:-translate-y-0.5 hover:bg-foreground/5"
             >
               <p className="font-semibold">
                 {v.make} {v.model}
               </p>
-              <p className="text-sm text-foreground/60">
+              <p className="text-sm text-muted">
                 {v.year} · {v.fuel_type}
               </p>
-              <div className="mt-2 flex items-center justify-between text-sm text-foreground/60">
+              <div className="mt-2 flex items-center justify-between text-sm text-muted">
                 <span>{v.license_plate}</span>
                 <span>{v.current_mileage.toLocaleString("de-DE")} km</span>
               </div>

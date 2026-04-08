@@ -1,4 +1,4 @@
-# Smart Car Manager — Testbenutzer
+# CarMan — Testbenutzer
 
 > Diese Benutzer werden direkt in Supabase angelegt, nicht als lokale Fixtures.
 > Passwörter sind nur für die Testumgebung vorgesehen.

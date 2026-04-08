@@ -1,4 +1,4 @@
-# Smart Car Manager — Pitch & Entscheidungsvorlage
+# CarMan — Pitch & Entscheidungsvorlage
 
 **Version:** 1.0  
 **Stand:** 2026-04-08  
@@ -54,7 +54,7 @@ Bestehende Wettbewerber lösen Teilprobleme:
 
 ---
 
-## 3. Die Lösung: Smart Car Manager
+## 3. Die Lösung: CarMan
 
 **Positionierung:**
 

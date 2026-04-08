@@ -1,4 +1,4 @@
-# Analyse Smart Car Manager
+# Analyse CarMan
 
 Stand: 2026-04-08
 
@@ -76,7 +76,7 @@ Das Projekt ist technisch vorbereitet, aber fachlich noch in einem sehr fruehen 
 
 ### 4.1 Kernvision
 
-Smart Car Manager soll das digitale Scheckheft und Kosten-Cockpit fuer private Fahrzeughalter werden. Die App soll Ausgaben dokumentieren, Wartungen strukturieren, Erinnerungen geben und spaeter durch Automatisierung und intelligente Hinweise proaktiven Mehrwert schaffen.
+CarMan soll das digitale Scheckheft und Kosten-Cockpit fuer private Fahrzeughalter werden. Die App soll Ausgaben dokumentieren, Wartungen strukturieren, Erinnerungen geben und spaeter durch Automatisierung und intelligente Hinweise proaktiven Mehrwert schaffen.
 
 ### 4.2 Geplante Zielgruppen
 
@@ -325,7 +325,7 @@ Viele Produkte loesen jeweils nur Teilprobleme gut:
 - Wartungshistorie
 - Flottenmanagement
 
-Die Gelegenheit fuer Smart Car Manager liegt daher nicht im "auch noch eine Fahrzeug-App", sondern in einer gut orchestrierten privaten Fahrzeugbetriebsplattform mit geringem Pflegeaufwand.
+Die Gelegenheit fuer CarMan liegt daher nicht im "auch noch eine Fahrzeug-App", sondern in einer gut orchestrierten privaten Fahrzeugbetriebsplattform mit geringem Pflegeaufwand.
 
 ## 8. Lueckenanalyse: Was im Markt noch offen ist
 

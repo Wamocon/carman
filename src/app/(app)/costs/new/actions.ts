@@ -8,6 +8,11 @@ const VALID_CATEGORIES = new Set<string>([
   "fuel", "maintenance", "repair", "insurance", "tax", "leasing", "parking", "other",
 ]);
 
+const MAX_AMOUNT = 999999.99;
+const MAX_MILEAGE = 9999999;
+const MAX_LITERS = 999.999;
+const MAX_PRICE_PER_LITER = 99.999;
+
 export async function createCostEntry(
   _prevState: { error: string | null },
   formData: FormData,
@@ -31,17 +36,28 @@ export async function createCostEntry(
   }
 
   const amount = parseFloat(amountStr);
-  if (isNaN(amount) || amount < 0) {
+  if (isNaN(amount) || amount < 0 || amount > MAX_AMOUNT) {
     return { error: "Bitte einen gültigen Betrag eingeben." };
   }
 
   const mileage = mileageStr ? parseInt(mileageStr, 10) : null;
-  if (mileage !== null && (isNaN(mileage) || mileage < 0)) {
+  if (mileage !== null && (isNaN(mileage) || mileage < 0 || mileage > MAX_MILEAGE)) {
     return { error: "Bitte einen gültigen Kilometerstand eingeben." };
   }
 
   const liters = litersStr ? parseFloat(litersStr) : null;
   const pricePerLiter = pplStr ? parseFloat(pplStr) : null;
+
+  if (liters !== null && (isNaN(liters) || liters < 0 || liters > MAX_LITERS)) {
+    return { error: "Bitte gueltige Liter eingeben (max. 999.999)." };
+  }
+
+  if (
+    pricePerLiter !== null &&
+    (isNaN(pricePerLiter) || pricePerLiter < 0 || pricePerLiter > MAX_PRICE_PER_LITER)
+  ) {
+    return { error: "Bitte einen gueltigen Preis je Liter eingeben." };
+  }
 
   const supabase = await createClient();
   const {

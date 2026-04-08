@@ -4,7 +4,7 @@ import type { UserProfile, Vehicle } from "@/types/domain";
 import { ExportForm } from "./ExportForm";
 
 export const metadata = {
-  title: "Export — Smart Car Manager",
+  title: "Export — CarMan",
 };
 
 export default async function ExportPage() {
@@ -28,11 +28,11 @@ export default async function ExportPage() {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-foreground">Daten exportieren</h1>
-        <div className="rounded-lg bg-amber-50 p-6 text-center dark:bg-amber-900/30">
-          <p className="text-lg font-semibold text-amber-700 dark:text-amber-400">
+        <div className="section-shell bg-amber-100/60 p-6 text-center">
+          <p className="text-lg font-semibold text-amber-800">
             Pro-Funktion
           </p>
-          <p className="mt-2 text-sm text-amber-600 dark:text-amber-400/80">
+          <p className="mt-2 text-sm text-amber-800/85">
             Der Datenexport ist nur im Pro-Tarif verfügbar. Upgrade dein Konto,
             um deine Kosten als CSV zu exportieren.
           </p>
@@ -50,9 +50,15 @@ export default async function ExportPage() {
   const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model">[];
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Daten exportieren</h1>
-      <ExportForm vehicles={allVehicles} />
+    <div className="mx-auto max-w-3xl space-y-6">
+      <section className="section-shell p-5 sm:p-6">
+        <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Export</p>
+        <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">CSV Export erstellen</h1>
+        <p className="mt-2 text-sm help-copy">Waehle ein Fahrzeug oder exportiere alle Daten. Mit Datumsgrenzen begrenzt du den Bericht auf den gewuenschten Zeitraum.</p>
+      </section>
+      <section className="section-shell p-5 sm:p-6">
+        <ExportForm vehicles={allVehicles} />
+      </section>
     </div>
   );
 }

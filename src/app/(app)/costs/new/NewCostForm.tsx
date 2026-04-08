@@ -31,10 +31,31 @@ export function NewCostForm({
 
   const isFuel = category === "fuel";
 
+  const clampInput = (event: React.FormEvent<HTMLInputElement>) => {
+    const input = event.currentTarget;
+    if (!input.value) return;
+
+    const value = Number(input.value);
+    if (Number.isNaN(value)) return;
+
+    if (input.max) {
+      const max = Number(input.max);
+      if (!Number.isNaN(max) && value > max) {
+        input.value = String(max);
+      }
+    }
+    if (input.min) {
+      const min = Number(input.min);
+      if (!Number.isNaN(min) && value < min) {
+        input.value = String(min);
+      }
+    }
+  };
+
   return (
     <form action={formAction} className="space-y-4">
       {state.error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
+        <div className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger">
           {state.error}
         </div>
       )}
@@ -48,7 +69,7 @@ export function NewCostForm({
           name="vehicle_id"
           required
           defaultValue={defaultVehicleId ?? vehicles[0]?.id}
-          className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         >
           {vehicles.map((v) => (
             <option key={v.id} value={v.id}>
@@ -67,8 +88,8 @@ export function NewCostForm({
           name="category"
           required
           value={category}
-          onChange={(e) => setCategory(e.target.value)}
-          className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          onChange={(e) => setCategory(e.target.value as CostCategory)}
+          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         >
           {CATEGORY_OPTIONS.map((opt) => (
             <option key={opt.value} value={opt.value}>
@@ -87,7 +108,7 @@ export function NewCostForm({
           name="title"
           type="text"
           required
-          className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
       </div>
 
@@ -102,9 +123,13 @@ export function NewCostForm({
             type="number"
             required
             min={0}
+            max={999999.99}
             step="0.01"
-            className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            placeholder="24,95"
+            onInput={clampInput}
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
+          <p className="mt-1 text-xs text-muted">Beispiel: 24,95 EUR</p>
         </div>
 
         <div>
@@ -117,7 +142,7 @@ export function NewCostForm({
             type="date"
             required
             defaultValue={new Date().toISOString().split("T")[0]}
-            className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
         </div>
       </div>
@@ -131,8 +156,12 @@ export function NewCostForm({
           name="mileage"
           type="number"
           min={0}
-          className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          max={9999999}
+          placeholder="123.456"
+          onInput={clampInput}
+          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
+        <p className="mt-1 text-xs text-muted">Maximal 7-stellig, z. B. 123.456 km</p>
       </div>
 
       {isFuel && (
@@ -146,9 +175,13 @@ export function NewCostForm({
               name="liters"
               type="number"
               min={0}
+              max={999.999}
               step="0.01"
-              className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="48,20"
+              onInput={clampInput}
+              className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
+            <p className="mt-1 text-xs text-muted">Maximal 3-stellig, z. B. 48,20 l</p>
           </div>
 
           <div>
@@ -160,8 +193,11 @@ export function NewCostForm({
               name="price_per_liter"
               type="number"
               min={0}
+              max={99.999}
               step="0.001"
-              className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              placeholder="1,729"
+              onInput={clampInput}
+              className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
             />
           </div>
         </div>
@@ -175,14 +211,16 @@ export function NewCostForm({
           id="notes"
           name="notes"
           rows={3}
-          className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
       </div>
+
+      <p className="text-xs text-muted">Profi-Tipp: Trage beim Tanken immer den Kilometerstand ein. So bleiben Verbrauch und Wartungszyklen belastbar.</p>
 
       <button
         type="submit"
         disabled={pending}
-        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
       >
         {pending ? "Wird gespeichert…" : "Eintrag speichern"}
       </button>

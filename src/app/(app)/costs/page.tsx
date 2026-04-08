@@ -5,7 +5,7 @@ import type { CostEntry, Vehicle } from "@/types/domain";
 import { CostsFilter } from "./CostsFilter";
 
 export const metadata = {
-  title: "Kosten — Smart Car Manager",
+  title: "Kosten — CarMan",
 };
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -73,15 +73,21 @@ export default async function CostsPage(props: {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-foreground">Kosten</h1>
-        <Link
-          href="/costs/new"
-          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
-        >
-          Neuer Eintrag
-        </Link>
-      </div>
+      <section className="section-shell p-5 sm:p-6">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Kosten</p>
+            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Kosteneintraege verwalten</h1>
+            <p className="mt-2 max-w-2xl text-sm help-copy">Filtere nach Fahrzeug oder Kategorie, um Trends zu erkennen. Fuer schnelle Eingaben nutze den Button rechts.</p>
+          </div>
+          <Link
+            href="/costs/new"
+            className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
+          >
+            Neuer Eintrag
+          </Link>
+        </div>
+      </section>
 
       <CostsFilter
         vehicles={allVehicles}
@@ -90,23 +96,23 @@ export default async function CostsPage(props: {
       />
 
       {costs.length === 0 ? (
-        <p className="text-sm text-foreground/60">Keine Kosteneinträge vorhanden.</p>
+        <p className="text-sm text-muted">Keine Kosteneinträge vorhanden.</p>
       ) : (
         <>
-          <div className="overflow-x-auto">
+          <div className="section-shell overflow-x-auto p-4 sm:p-5">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-foreground/10 text-left">
-                  <th className="pb-2 pr-4 font-medium text-foreground/60">Datum</th>
-                  <th className="pb-2 pr-4 font-medium text-foreground/60">Kategorie</th>
-                  <th className="pb-2 pr-4 font-medium text-foreground/60">Titel</th>
-                  <th className="pb-2 pr-4 font-medium text-foreground/60">Fahrzeug</th>
-                  <th className="pb-2 text-right font-medium text-foreground/60">Betrag</th>
+                <tr className="border-b border-border text-left">
+                  <th className="pb-2 pr-4 font-medium text-muted">Datum</th>
+                  <th className="pb-2 pr-4 font-medium text-muted">Kategorie</th>
+                  <th className="pb-2 pr-4 font-medium text-muted">Titel</th>
+                  <th className="pb-2 pr-4 font-medium text-muted">Fahrzeug</th>
+                  <th className="pb-2 text-right font-medium text-muted">Betrag</th>
                 </tr>
               </thead>
               <tbody>
                 {costs.map((c) => (
-                  <tr key={c.id} className="border-b border-foreground/5">
+                  <tr key={c.id} className="border-b border-border/60">
                     <td className="py-2 pr-4">{formatDate(c.date)}</td>
                     <td className="py-2 pr-4">
                       {CATEGORY_LABELS[c.category] ?? c.category}
@@ -122,24 +128,23 @@ export default async function CostsPage(props: {
             </table>
           </div>
 
-          {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2">
               {page > 1 && (
                 <Link
                   href={`/costs?page=${page - 1}${searchParams.vehicle_id ? `&vehicle_id=${searchParams.vehicle_id}` : ""}${searchParams.category ? `&category=${searchParams.category}` : ""}`}
-                  className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm hover:bg-foreground/5"
+                  className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm hover:bg-foreground/5"
                 >
                   Zurück
                 </Link>
               )}
-              <span className="text-sm text-foreground/60">
+              <span className="text-sm text-muted">
                 Seite {page} von {totalPages}
               </span>
               {page < totalPages && (
                 <Link
                   href={`/costs?page=${page + 1}${searchParams.vehicle_id ? `&vehicle_id=${searchParams.vehicle_id}` : ""}${searchParams.category ? `&category=${searchParams.category}` : ""}`}
-                  className="rounded-md border border-foreground/20 px-3 py-1.5 text-sm hover:bg-foreground/5"
+                  className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm hover:bg-foreground/5"
                 >
                   Weiter
                 </Link>

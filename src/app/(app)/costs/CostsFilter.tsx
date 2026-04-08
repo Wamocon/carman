@@ -39,11 +39,12 @@ export function CostsFilter({
   }
 
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="section-shell flex flex-wrap items-center gap-3 p-4">
+      <p className="text-xs uppercase tracking-[0.15em] text-muted">Filter</p>
       <select
         value={selectedVehicle ?? ""}
         onChange={(e) => updateFilter("vehicle_id", e.target.value)}
-        className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
+        className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
       >
         <option value="">Alle Fahrzeuge</option>
         {vehicles.map((v) => (
@@ -56,7 +57,7 @@ export function CostsFilter({
       <select
         value={selectedCategory ?? ""}
         onChange={(e) => updateFilter("category", e.target.value)}
-        className="rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground"
+        className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
       >
         {CATEGORY_OPTIONS.map((opt) => (
           <option key={opt.value} value={opt.value}>

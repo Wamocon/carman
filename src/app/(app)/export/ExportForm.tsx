@@ -37,7 +37,7 @@ export function ExportForm({
   return (
     <form action={handleSubmit} className="space-y-4">
       {error && (
-        <div className="rounded-md bg-red-50 p-3 text-sm text-red-700 dark:bg-red-900/30 dark:text-red-400">
+        <div className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger">
           {error}
         </div>
       )}
@@ -49,7 +49,7 @@ export function ExportForm({
         <select
           id="vehicle_id"
           name="vehicle_id"
-          className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         >
           <option value="">Alle Fahrzeuge</option>
           {vehicles.map((v) => (
@@ -69,7 +69,7 @@ export function ExportForm({
             id="from_date"
             name="from_date"
             type="date"
-            className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
         </div>
 
@@ -81,15 +81,17 @@ export function ExportForm({
             id="to_date"
             name="to_date"
             type="date"
-            className="mt-1 block w-full rounded-md border border-foreground/20 bg-background px-3 py-2 text-sm text-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
           />
         </div>
       </div>
 
+      <p className="text-xs text-muted">Export-Datei: CSV mit Datum, Kategorie, Titel, Betrag sowie optionalen Tank- und Kilometerdaten.</p>
+
       <button
         type="submit"
         disabled={exporting}
-        className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+        className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
       >
         {exporting ? "Wird exportiert…" : "Als CSV exportieren"}
       </button>

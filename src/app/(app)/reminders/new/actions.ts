@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import type { ReminderType } from "@/types/domain";
 
 const VALID_TYPES = new Set<string>(["date", "mileage", "both"]);
+const MAX_MILEAGE = 9999999;
 
 export async function createReminder(
   _prevState: { error: string | null },
@@ -26,6 +27,10 @@ export async function createReminder(
   }
 
   const dueMileage = dueMileageStr ? parseInt(dueMileageStr, 10) : null;
+
+  if (dueMileage !== null && (isNaN(dueMileage) || dueMileage < 0 || dueMileage > MAX_MILEAGE)) {
+    return { error: "Bitte einen gueltigen Kilometerstand eingeben (max. 7-stellig)." };
+  }
 
   const supabase = await createClient();
   const {

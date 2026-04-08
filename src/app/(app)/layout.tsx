@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/Sidebar";
+import { getPreferencesFromCookies } from "@/lib/preferences.server";
 import type { UserProfile } from "@/types/domain";
 
 async function signOut() {
@@ -15,6 +16,8 @@ export default async function AppLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const { locale, theme } = await getPreferencesFromCookies();
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -44,9 +47,11 @@ export default async function AppLayout({
   };
 
   return (
-    <div className="flex min-h-screen flex-col md:flex-row">
-      <Sidebar profile={userProfile} signOutAction={signOut} />
-      <main className="flex-1 overflow-auto p-4 md:p-8">{children}</main>
+    <div className="flex min-h-screen flex-col bg-transparent md:flex-row">
+      <Sidebar profile={userProfile} signOutAction={signOut} locale={locale} theme={theme} />
+      <main className="flex-1 overflow-auto p-4 pb-8 md:p-8 lg:p-10">
+        <div className="mx-auto w-full max-w-7xl">{children}</div>
+      </main>
     </div>
   );
 }

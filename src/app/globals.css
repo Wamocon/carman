@@ -1,26 +1,78 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f7f3;
+  --foreground: #101820;
+  --card: #ffffff;
+  --card-foreground: #101820;
+  --muted: #5c6b63;
+  --border: #d7e1d8;
+  --brand: #155eef;
+  --brand-strong: #0f4bc9;
+  --success: #16803c;
+  --danger: #c32828;
+  --bg-glow-a: #d8e6ff;
+  --bg-glow-b: #d8f3de;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-success: var(--success);
+  --color-danger: var(--danger);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html[data-theme="dark"] {
+  --background: #09141b;
+  --foreground: #e5eef4;
+  --card: #10222d;
+  --card-foreground: #e5eef4;
+  --muted: #9eb2c2;
+  --border: #294655;
+  --brand: #5da5ff;
+  --brand-strong: #8bbdff;
+  --success: #5ad88a;
+  --danger: #ff9090;
+  --bg-glow-a: #133657;
+  --bg-glow-b: #164136;
 }
 
 body {
-  background: var(--background);
+  min-height: 100vh;
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), "Segoe UI", sans-serif;
+  background:
+    radial-gradient(1300px 600px at 15% -20%, var(--bg-glow-a) 0%, transparent 55%),
+    radial-gradient(1200px 700px at 100% -10%, var(--bg-glow-b) 0%, transparent 55%),
+    var(--background);
+}
+
+.surface {
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+  background: color-mix(in oklab, var(--card) 92%, transparent);
+  box-shadow: 0 14px 40px -28px rgba(10, 24, 35, 0.5);
+}
+
+.section-shell {
+  border: 1px solid color-mix(in oklab, var(--border) 78%, transparent);
+  border-radius: 1.25rem;
+  background: color-mix(in oklab, var(--card) 94%, transparent);
+  box-shadow: 0 24px 48px -38px rgba(10, 24, 35, 0.55);
+}
+
+.heading-display {
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+
+.help-copy {
+  color: color-mix(in oklab, var(--foreground) 68%, transparent);
 }

@@ -1,4 +1,4 @@
-# Smart Car Manager — Implementierungsstand V1
+# CarMan — Implementierungsstand V1
 
 **Stand:** 2026-04-08
 

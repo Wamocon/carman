@@ -1,12 +1,18 @@
+import { PreferenceSwitches } from "@/components/PreferenceSwitches";
+import { getDictionary } from "@/lib/i18n";
+import { getPreferencesFromCookies } from "@/lib/preferences.server";
 import { createClient } from "@/lib/supabase/server";
 import type { UserProfile } from "@/types/domain";
 import { SettingsForm } from "./SettingsForm";
 
 export const metadata = {
-  title: "Einstellungen — Smart Car Manager",
+  title: "Einstellungen — CarMan",
 };
 
 export default async function SettingsPage() {
+  const { locale, theme } = await getPreferencesFromCookies();
+  const t = getDictionary(locale);
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -25,44 +31,53 @@ export default async function SettingsPage() {
   if (!userProfile) return null;
 
   return (
-    <div className="mx-auto max-w-lg space-y-8">
-      <h1 className="text-2xl font-bold text-foreground">Einstellungen</h1>
+    <div className="mx-auto max-w-3xl space-y-8">
+      <section className="section-shell p-5 sm:p-6">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">{t.settingsPage.eyebrow}</p>
+            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">{t.settingsPage.title}</h1>
+            <p className="mt-2 text-sm help-copy">{t.settingsPage.copy}</p>
+          </div>
+          <div className="sm:w-56">
+            <PreferenceSwitches locale={locale} theme={theme} />
+          </div>
+        </div>
+      </section>
 
-      {/* Profile info */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Profil</h2>
-        <div className="rounded-lg border border-foreground/10 p-4 text-sm">
+      <section className="section-shell space-y-4 p-5 sm:p-6">
+        <h2 className="text-lg font-semibold text-foreground">{t.settingsPage.profileTitle}</h2>
+        <div className="rounded-xl border border-border p-4 text-sm">
           <p>
-            <span className="text-foreground/60">E-Mail:</span>{" "}
+            <span className="text-muted">{t.settingsPage.email}:</span>{" "}
             {userProfile.email}
           </p>
           <p className="mt-1">
-            <span className="text-foreground/60">Mitglied seit:</span>{" "}
-            {new Date(userProfile.created_at).toLocaleDateString("de-DE")}
+            <span className="text-muted">{t.settingsPage.memberSince}:</span>{" "}
+            {new Date(userProfile.created_at).toLocaleDateString(locale === "de" ? "de-DE" : "en-US")}
           </p>
         </div>
 
-        <SettingsForm displayName={userProfile.display_name ?? ""} />
+        <SettingsForm displayName={userProfile.display_name ?? ""} locale={locale} />
       </section>
 
-      {/* Subscription */}
-      <section className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Abonnement</h2>
-        <div className="rounded-lg border border-foreground/10 p-4">
+      <section className="section-shell space-y-4 p-5 sm:p-6">
+        <h2 className="text-lg font-semibold text-foreground">{t.settingsPage.subscriptionTitle}</h2>
+        <div className="rounded-xl border border-border p-4">
           <div className="flex items-center gap-3">
             <span
               className={`inline-flex rounded-full px-3 py-1 text-sm font-medium ${
                 userProfile.subscription_tier === "pro"
-                  ? "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400"
-                  : "bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400"
+                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
+                  : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
               }`}
             >
-              {userProfile.subscription_tier === "pro" ? "Pro" : "Free"}
+              {userProfile.subscription_tier === "pro" ? t.common.pro : t.common.free}
             </span>
           </div>
           {userProfile.subscription_tier === "free" && (
-            <p className="mt-3 text-sm text-foreground/60">
-              Upgrade auf Pro für unbegrenzte Fahrzeuge, Datenexport und mehr.
+            <p className="mt-3 text-sm text-muted">
+              {t.settingsPage.upgradeCopy}
             </p>
           )}
         </div>

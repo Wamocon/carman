@@ -24,8 +24,8 @@ export function ReminderToggle({
       disabled={isPending}
       className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded border ${
         isCompleted
-          ? "border-green-500 bg-green-500 text-white"
-          : "border-foreground/30 hover:border-blue-500"
+          ? "border-success bg-success text-white"
+          : "border-border hover:border-brand"
       } ${isPending ? "opacity-50" : ""}`}
       aria-label={isCompleted ? "Als offen markieren" : "Als erledigt markieren"}
     >

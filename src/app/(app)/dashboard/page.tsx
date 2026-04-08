@@ -1,13 +1,19 @@
 import Link from "next/link";
+import { DashboardInsights } from "./DashboardInsights";
+import { getDictionary } from "@/lib/i18n";
+import { getLocaleFromCookies } from "@/lib/preferences.server";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatNumber } from "@/lib/utils";
 import type { Vehicle, CostEntry, Reminder } from "@/types/domain";
 
 export const metadata = {
-  title: "Dashboard — Smart Car Manager",
+  title: "Dashboard — CarMan",
 };
 
 export default async function DashboardPage() {
+  const locale = await getLocaleFromCookies();
+  const t = getDictionary(locale);
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -89,43 +95,71 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-2xl font-bold text-foreground">Dashboard</h1>
+    <div className="space-y-6 md:space-y-8">
+      <section className="section-shell overflow-hidden p-5 sm:p-7">
+        <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:items-end">
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">{t.dashboard.eyebrow}</p>
+            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground sm:text-4xl">{t.dashboard.title}</h1>
+            <p className="mt-2 max-w-2xl text-sm help-copy sm:text-base">
+              {t.dashboard.copy}
+            </p>
+          </div>
+          <div className="grid gap-2 text-sm sm:grid-cols-3 lg:grid-cols-1">
+            <Link href="/costs/new" className="rounded-xl bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-strong">
+              {t.dashboard.addCost}
+            </Link>
+            <Link href="/reminders/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium hover:bg-foreground/5">
+              {t.dashboard.addReminder}
+            </Link>
+            <Link href="/vehicles/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium hover:bg-foreground/5">
+              {t.dashboard.addVehicle}
+            </Link>
+          </div>
+        </div>
+      </section>
 
-      {/* Summary cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-lg border border-foreground/10 p-4">
-          <p className="text-sm text-foreground/60">Kosten diesen Monat</p>
-          <p className="mt-1 text-2xl font-bold">{formatCurrency(costsThisMonth)}</p>
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.month}</p>
+          <p className="mt-2 text-sm text-muted">{t.dashboard.currentCosts}</p>
+          <p className="mt-1 text-2xl font-semibold">{formatCurrency(costsThisMonth, locale)}</p>
         </div>
-        <div className="rounded-lg border border-foreground/10 p-4">
-          <p className="text-sm text-foreground/60">Kosten letzten Monat</p>
-          <p className="mt-1 text-2xl font-bold">{formatCurrency(costsLastMonth)}</p>
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.compare}</p>
+          <p className="mt-2 text-sm text-muted">{t.dashboard.previousCosts}</p>
+          <p className="mt-1 text-2xl font-semibold">{formatCurrency(costsLastMonth, locale)}</p>
         </div>
-        <div className="rounded-lg border border-foreground/10 p-4">
-          <p className="text-sm text-foreground/60">Fahrzeuge</p>
-          <p className="mt-1 text-2xl font-bold">{allVehicles.length}</p>
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.inventory}</p>
+          <p className="mt-2 text-sm text-muted">{t.dashboard.vehicleCount}</p>
+          <p className="mt-1 text-2xl font-semibold">{allVehicles.length}</p>
         </div>
-        <div className="rounded-lg border border-foreground/10 p-4">
-          <p className="text-sm text-foreground/60">Offene Erinnerungen</p>
-          <p className="mt-1 text-2xl font-bold">{upcomingReminders.length}</p>
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.todos}</p>
+          <p className="mt-2 text-sm text-muted">{t.dashboard.openReminders}</p>
+          <p className="mt-1 text-2xl font-semibold">{upcomingReminders.length}</p>
         </div>
       </div>
 
-      {/* Per vehicle */}
+      <DashboardInsights costs={allCosts} reminders={allReminders} locale={locale} />
+
       {allVehicles.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-foreground/20 p-8 text-center">
-          <p className="text-foreground/60">Noch keine Fahrzeuge vorhanden.</p>
+        <div className="section-shell border-dashed p-8 text-center">
+          <p className="text-muted">{t.dashboard.noVehicles}</p>
           <Link
             href="/vehicles/new"
-            className="mt-3 inline-block rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+            className="mt-4 inline-block rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
           >
-            Erstes Fahrzeug hinzufügen
+            {t.dashboard.firstVehicle}
           </Link>
         </div>
       ) : (
         <div className="space-y-4">
-          <h2 className="text-lg font-semibold text-foreground">Deine Fahrzeuge</h2>
+          <div className="flex items-center justify-between gap-3">
+            <h2 className="text-xl font-semibold text-foreground">{t.dashboard.yourVehicles}</h2>
+            <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.dashboard.openCardHint}</p>
+          </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {allVehicles.map((v) => {
               const stats = getVehicleStats(v.id);
@@ -133,21 +167,21 @@ export default async function DashboardPage() {
                 <Link
                   key={v.id}
                   href={`/vehicles/${v.id}`}
-                  className="block rounded-lg border border-foreground/10 p-4 transition-colors hover:bg-foreground/5"
+                  className="surface block rounded-2xl p-4 transition-all hover:-translate-y-0.5 hover:bg-foreground/5"
                 >
-                  <p className="font-semibold">
+                  <p className="font-semibold text-foreground">
                     {v.make} {v.model}
                   </p>
-                  <p className="text-sm text-foreground/60">
+                  <p className="text-sm text-muted">
                     {v.year} · {v.license_plate}
                   </p>
                   <div className="mt-3 flex gap-4 text-sm">
                     <span>
-                      Kosten: <strong>{formatCurrency(stats.totalCosts)}</strong>
+                      {t.dashboard.costsLabel}: <strong className="font-semibold">{formatCurrency(stats.totalCosts, locale)}</strong>
                     </span>
                     {stats.avgConsumption !== null && (
-                      <span>
-                        Ø {formatNumber(stats.avgConsumption)} L/100km
+                      <span className="text-muted">
+                        O {formatNumber(stats.avgConsumption, 1, locale)} L/100km
                       </span>
                     )}
                   </div>

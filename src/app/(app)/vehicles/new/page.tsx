@@ -4,7 +4,7 @@ import type { UserProfile } from "@/types/domain";
 import { NewVehicleForm } from "./NewVehicleForm";
 
 export const metadata = {
-  title: "Neues Fahrzeug — Smart Car Manager",
+  title: "Neues Fahrzeug — CarMan",
 };
 
 export default async function NewVehiclePage() {
@@ -31,8 +31,8 @@ export default async function NewVehiclePage() {
     return (
       <div className="space-y-4">
         <h1 className="text-2xl font-bold text-foreground">Neues Fahrzeug</h1>
-        <div className="rounded-lg bg-amber-50 p-6 text-center dark:bg-amber-900/30">
-          <p className="text-amber-700 dark:text-amber-400">
+        <div className="section-shell bg-amber-100/60 p-6 text-center">
+          <p className="text-amber-800">
             Du hast das Fahrzeuglimit für den Free-Tarif erreicht. Upgrade auf
             Pro, um unbegrenzt Fahrzeuge hinzuzufügen.
           </p>
@@ -42,9 +42,16 @@ export default async function NewVehiclePage() {
   }
 
   return (
-    <div className="mx-auto max-w-lg space-y-6">
-      <h1 className="text-2xl font-bold text-foreground">Neues Fahrzeug</h1>
+    <div className="mx-auto max-w-3xl space-y-6">
+      <section className="section-shell p-5 sm:p-6">
+        <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Setup</p>
+        <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Neues Fahrzeug anlegen</h1>
+        <p className="mt-2 text-sm help-copy">Pflege die Stammdaten sauber ein. Danach kannst du Kosten direkt auf dieses Fahrzeug buchen.</p>
+      </section>
+
+      <section className="section-shell p-5 sm:p-6">
       <NewVehicleForm />
+      </section>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-# Smart Car Manager
+# CarMan
 
 Private vehicle management — fuel, costs, maintenance, reminders — in one web app.  
 Built with **Next.js 16**, **TypeScript**, **Tailwind CSS v4**, and **Supabase**.
