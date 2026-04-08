@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { PreferenceSwitches } from "@/components/PreferenceSwitches";
 import { getDictionary } from "@/lib/i18n";
 import { getPreferencesFromCookies } from "@/lib/preferences.server";
@@ -70,3 +70,5 @@ export default async function LoginPage(props: {
     </main>
   );
 }
+
+

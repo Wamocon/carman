@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { createClient } from "@/lib/supabase/server";
 
@@ -11,7 +11,7 @@ export async function register(
   const displayName = formData.get("display_name") as string;
 
   if (!email || !password || !displayName) {
-    return { error: "Bitte alle Felder ausfüllen.", success: false };
+    return { error: "Bitte alle Felder ausfällen.", success: false };
   }
 
   if (password.length < 6) {
@@ -33,3 +33,5 @@ export async function register(
 
   return { error: null, success: true };
 }
+
+

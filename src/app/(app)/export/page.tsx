@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { isProFeature } from "@/lib/utils";
 import type { UserProfile, Vehicle } from "@/types/domain";
 import { ExportForm } from "./ExportForm";
@@ -53,8 +53,8 @@ export default async function ExportPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <section className="section-shell p-5 sm:p-6">
         <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Export</p>
-        <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">CSV Export erstellen</h1>
-        <p className="mt-2 text-sm help-copy">Waehle ein Fahrzeug oder exportiere alle Daten. Mit Datumsgrenzen begrenzt du den Bericht auf den gewuenschten Zeitraum.</p>
+        <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">CSV-Export erstellen</h1>
+        <p className="mt-2 text-sm help-copy">Wähle ein Fahrzeug oder exportiere alle Daten. Mit Datumsgrenzen begrenzt du den Bericht auf den gewünschten Zeitraum.</p>
       </section>
       <section className="section-shell p-5 sm:p-6">
         <ExportForm vehicles={allVehicles} />
@@ -62,3 +62,5 @@ export default async function ExportPage() {
     </div>
   );
 }
+
+

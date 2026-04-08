@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { getPreferencesFromCookies } from "@/lib/preferences.server";
 import "./globals.css";
@@ -38,3 +38,4 @@ export default async function RootLayout({
     </html>
   );
 }
+

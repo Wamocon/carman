@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter } from "next/navigation";
 import { deleteVehicle } from "./actions";
@@ -30,7 +30,7 @@ export function VehicleActions({ vehicleId }: { vehicleId: string }) {
             disabled={deleting}
             className="rounded-xl bg-danger px-3 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            {deleting ? "Wird gelöscht…" : "Bestätigen"}
+            {deleting ? "Wird gelöscht..." : "Bestätigen"}
           </button>
           <button
             onClick={() => setConfirming(false)}

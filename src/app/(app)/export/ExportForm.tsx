@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import type { Vehicle } from "@/types/domain";
@@ -93,8 +93,10 @@ export function ExportForm({
         disabled={exporting}
         className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
       >
-        {exporting ? "Wird exportiert…" : "Als CSV exportieren"}
+        {exporting ? "Wird exportiert..." : "Als CSV exportieren"}
       </button>
     </form>
   );
 }
+
+

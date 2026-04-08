@@ -1,4 +1,4 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { CostEntry, Vehicle } from "@/types/domain";
@@ -38,15 +38,48 @@ export default async function CostsPage(props: {
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const offset = (page - 1) * PAGE_SIZE;
+  const hasActiveFilters = Boolean(searchParams.vehicle_id) || Boolean(searchParams.category);
 
   // Fetch vehicles for filter dropdown
   const { data: vehicles } = await supabase
     .from("vehicles")
-    .select("id, make, model")
+    .select("id, make, model, purchase_price")
     .eq("user_id", user.id)
     .order("make");
 
-  const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model">[];
+  const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model" | "purchase_price">[];
+
+  const { data: allCostsRaw } = await supabase
+    .from("cost_entries")
+    .select("vehicle_id, amount")
+    .eq("user_id", user.id);
+
+  const allCostsForTotals = (allCostsRaw ?? []) as Array<{ vehicle_id: string; amount: number }>;
+  const runningCostByVehicle = allCostsForTotals.reduce<Record<string, number>>((acc, entry) => {
+    acc[entry.vehicle_id] = (acc[entry.vehicle_id] ?? 0) + entry.amount;
+    return acc;
+  }, {});
+  const allRunningCosts = allCostsForTotals.reduce((sum, entry) => sum + entry.amount, 0);
+  const allPurchaseCosts = allVehicles.reduce((sum, vehicle) => sum + (vehicle.purchase_price ?? 0), 0);
+  const allOwnershipCosts = allRunningCosts + allPurchaseCosts;
+
+  let filteredTotalsQuery = supabase
+    .from("cost_entries")
+    .select("amount")
+    .eq("user_id", user.id);
+
+  if (searchParams.vehicle_id) {
+    filteredTotalsQuery = filteredTotalsQuery.eq("vehicle_id", searchParams.vehicle_id);
+  }
+  if (searchParams.category) {
+    filteredTotalsQuery = filteredTotalsQuery.eq("category", searchParams.category);
+  }
+
+  const { data: filteredTotalsRaw } = await filteredTotalsQuery;
+  const filteredRunningCosts = (filteredTotalsRaw ?? []).reduce(
+    (sum, entry) => sum + Number(entry.amount ?? 0),
+    0,
+  );
 
   // Build cost query
   let query = supabase
@@ -77,8 +110,8 @@ export default async function CostsPage(props: {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Kosten</p>
-            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Kosteneintraege verwalten</h1>
-            <p className="mt-2 max-w-2xl text-sm help-copy">Filtere nach Fahrzeug oder Kategorie, um Trends zu erkennen. Fuer schnelle Eingaben nutze den Button rechts.</p>
+            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Kosteneinträge verwalten</h1>
+            <p className="mt-2 max-w-2xl text-sm help-copy">Filtere nach Fahrzeug oder Kategorie, um Trends zu erkennen. Für schnelle Eingaben nutze den Button rechts.</p>
           </div>
           <Link
             href="/costs/new"
@@ -96,10 +129,24 @@ export default async function CostsPage(props: {
       />
 
       {costs.length === 0 ? (
-        <p className="text-sm text-muted">Keine Kosteneinträge vorhanden.</p>
+        <section className="section-shell space-y-2 p-4 sm:p-5">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-muted">
+              {hasActiveFilters ? "Gefilterte Kosten" : "Gesamtkosten"}
+            </p>
+            <p className="mt-1 text-2xl font-semibold text-foreground">{formatCurrency(filteredRunningCosts)}</p>
+          </div>
+          <p className="text-sm text-muted">Keine Kosteneinträge vorhanden.</p>
+        </section>
       ) : (
         <>
           <div className="section-shell overflow-x-auto p-4 sm:p-5">
+            <div className="mb-3 flex items-center justify-between gap-3">
+              <p className="text-xs uppercase tracking-[0.15em] text-muted">
+                {hasActiveFilters ? "Gefilterte Kosten" : "Gesamtkosten"}
+              </p>
+              <p className="text-lg font-semibold text-foreground">{formatCurrency(filteredRunningCosts)}</p>
+            </div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
@@ -117,7 +164,11 @@ export default async function CostsPage(props: {
                     <td className="py-2 pr-4">
                       {CATEGORY_LABELS[c.category] ?? c.category}
                     </td>
-                    <td className="py-2 pr-4">{c.title}</td>
+                    <td className="py-2 pr-4">
+                      <Link href={`/costs/${c.id}`} className="font-medium text-brand hover:underline">
+                        {c.title}
+                      </Link>
+                    </td>
                     <td className="py-2 pr-4">
                       {c.vehicles.make} {c.vehicles.model}
                     </td>
@@ -151,8 +202,66 @@ export default async function CostsPage(props: {
               )}
             </div>
           )}
+
+          {allVehicles.length > 0 ? (
+            <details className="section-shell p-4 sm:p-5">
+              <summary className="cursor-pointer text-sm font-semibold text-foreground">
+                Gesamtkosten auf- und zuklappen
+              </summary>
+              <div className="mt-3 space-y-3">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted">Betriebskosten gesamt</p>
+                    <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allRunningCosts)}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted">Kaufpreise gesamt</p>
+                    <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allPurchaseCosts)}</p>
+                  </div>
+                  <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                    <p className="text-xs uppercase tracking-[0.12em] text-muted">Gesamtaufwand</p>
+                    <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allOwnershipCosts)}</p>
+                  </div>
+                </div>
+
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+                  {allVehicles.map((vehicle) => {
+                    const runningCosts = runningCostByVehicle[vehicle.id] ?? 0;
+                    const purchasePrice = vehicle.purchase_price ?? 0;
+                    const totalOwnership = runningCosts + purchasePrice;
+
+                    return (
+                      <Link
+                        key={vehicle.id}
+                        href={`/vehicles/${vehicle.id}`}
+                        className="rounded-xl border border-border/70 bg-card/70 p-3 transition-colors hover:bg-foreground/5"
+                      >
+                        <p className="font-medium text-foreground">{vehicle.make} {vehicle.model}</p>
+                        <div className="mt-2 space-y-1 text-xs sm:text-sm">
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted">Betriebskosten</span>
+                            <span className="font-medium text-foreground">{formatCurrency(runningCosts)}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-muted">Kaufpreis</span>
+                            <span className="font-medium text-foreground">{formatCurrency(purchasePrice)}</span>
+                          </div>
+                          <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-1.5">
+                            <span className="font-medium text-foreground">Gesamtaufwand</span>
+                            <span className="text-sm font-semibold text-foreground">{formatCurrency(totalOwnership)}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              </div>
+            </details>
+          ) : null}
         </>
       )}
     </div>
   );
 }
+
+

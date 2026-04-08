@@ -1,5 +1,6 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { canAddVehicle } from "@/lib/utils";
+import { getLocaleFromCookies } from "@/lib/preferences.server";
 import type { UserProfile } from "@/types/domain";
 import { NewVehicleForm } from "./NewVehicleForm";
 
@@ -8,6 +9,7 @@ export const metadata = {
 };
 
 export default async function NewVehiclePage() {
+  const locale = await getLocaleFromCookies();
   const supabase = await createClient();
   const {
     data: { user },
@@ -46,12 +48,14 @@ export default async function NewVehiclePage() {
       <section className="section-shell p-5 sm:p-6">
         <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Setup</p>
         <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Neues Fahrzeug anlegen</h1>
-        <p className="mt-2 text-sm help-copy">Pflege die Stammdaten sauber ein. Danach kannst du Kosten direkt auf dieses Fahrzeug buchen.</p>
+        <p className="mt-2 text-sm help-copy">Nutze VIN, Vorschläge für Marke und Modell sowie optionale Detailfelder, um dein Fahrzeug möglichst vollständig mit wenig Zeitaufwand abzubilden.</p>
       </section>
 
       <section className="section-shell p-5 sm:p-6">
-      <NewVehicleForm />
+      <NewVehicleForm locale={locale} />
       </section>
     </div>
   );
 }
+
+

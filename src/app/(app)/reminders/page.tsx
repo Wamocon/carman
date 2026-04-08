@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import { formatDate } from "@/lib/utils";
 import type { Reminder, Vehicle } from "@/types/domain";
 import Link from "next/link";
@@ -31,7 +31,10 @@ export default async function RemindersPage(props: {
     query = query.eq("is_completed", false);
   }
 
-  const { data: reminders } = await query;
+  const [{ data: reminders }, { data: linkedCosts }] = await Promise.all([
+    query,
+    supabase.from("cost_entries").select("id, reminder_id").eq("user_id", user.id).not("reminder_id", "is", null),
+  ]);
 
   const { data: vehicles } = await supabase
     .from("vehicles")
@@ -42,6 +45,14 @@ export default async function RemindersPage(props: {
   const allReminders = (reminders ?? []) as (Reminder & {
     vehicles: { make: string; model: string };
   })[];
+  const linkedCostCountByReminder = (linkedCosts ?? []).reduce<Record<string, number>>((acc, entry) => {
+    const reminderId = entry.reminder_id as string | null;
+    if (!reminderId) {
+      return acc;
+    }
+    acc[reminderId] = (acc[reminderId] ?? 0) + 1;
+    return acc;
+  }, {});
 
   // Group by vehicle
   const grouped = new Map<string, typeof allReminders>();
@@ -59,8 +70,8 @@ export default async function RemindersPage(props: {
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Erinnerungen</p>
-            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Faelligkeiten im Griff behalten</h1>
-            <p className="mt-2 max-w-2xl text-sm help-copy">Nutze Datum, Kilometerstand oder beides. Erledigte Aufgaben kannst du jederzeit wieder oeffnen.</p>
+            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Fälligkeiten im Griff behalten</h1>
+            <p className="mt-2 max-w-2xl text-sm help-copy">Nutze Datum, Kilometerstand oder beides. Erledigte Aufgaben kannst du jederzeit wieder öffnen.</p>
           </div>
           <Link
             href="/reminders/new"
@@ -107,7 +118,7 @@ export default async function RemindersPage(props: {
                         reminderId={r.id}
                         isCompleted={r.is_completed}
                       />
-                      <div className={r.is_completed ? "text-foreground/40" : ""}>
+                      <div className={`flex-1 ${r.is_completed ? "text-foreground/40" : ""}`}>
                         <p className={`font-medium ${r.is_completed ? "line-through" : ""}`}>
                           {r.title}
                         </p>
@@ -122,6 +133,23 @@ export default async function RemindersPage(props: {
                             {r.notes}
                           </p>
                         )}
+                        <p className="mt-2 text-xs text-muted">
+                          Verknüpfte Kosten: {linkedCostCountByReminder[r.id] ?? 0}
+                        </p>
+                      </div>
+                      <div className="flex shrink-0 flex-col gap-2">
+                        <Link
+                          href={`/reminders/${r.id}`}
+                          className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                        >
+                          Bearbeiten
+                        </Link>
+                        <Link
+                          href={`/costs/new?vehicle_id=${r.vehicle_id}&category=maintenance&reminder_id=${r.id}&title=${encodeURIComponent(r.title)}&notes=${encodeURIComponent(`Erfasst aus Erinnerung: ${r.title}`)}`}
+                          className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-strong"
+                        >
+                          Kosten anhängen
+                        </Link>
                       </div>
                     </li>
                   ))}
@@ -134,3 +162,5 @@ export default async function RemindersPage(props: {
     </div>
   );
 }
+
+

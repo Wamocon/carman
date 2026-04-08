@@ -1,4 +1,4 @@
-export const THEME_COOKIE = "carman_theme";
+﻿export const THEME_COOKIE = "carman_theme";
 export const LOCALE_COOKIE = "carman_locale";
 
 export type Theme = "light" | "dark";
@@ -11,3 +11,4 @@ export function resolveTheme(value?: string): Theme {
 export function resolveLocale(value?: string): Locale {
   return value === "en" ? "en" : "de";
 }
+

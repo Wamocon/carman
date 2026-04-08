@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useRouter, useSearchParams } from "next/navigation";
 import type { Vehicle } from "@/types/domain";
@@ -26,6 +26,7 @@ export function CostsFilter({
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const hasActiveFilters = Boolean(selectedVehicle) || Boolean(selectedCategory);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -36,6 +37,10 @@ export function CostsFilter({
     }
     params.delete("page");
     router.push(`/costs?${params.toString()}`);
+  }
+
+  function resetFilters() {
+    router.push("/costs");
   }
 
   return (
@@ -65,6 +70,18 @@ export function CostsFilter({
           </option>
         ))}
       </select>
+
+      {hasActiveFilters ? (
+        <button
+          type="button"
+          onClick={resetFilters}
+          className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5"
+        >
+          Filter zurücksetzen
+        </button>
+      ) : null}
     </div>
   );
 }
+
+

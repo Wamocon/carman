@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState } from "react";
 import { getDictionary } from "@/lib/i18n";
@@ -84,3 +84,4 @@ export function RegisterForm({ locale }: { locale: Locale }) {
     </form>
   );
 }
+

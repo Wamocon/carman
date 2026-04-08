@@ -1,4 +1,4 @@
-import type { Locale } from "@/lib/preferences";
+﻿import type { Locale } from "@/lib/preferences";
 
 const messages = {
   de: {
@@ -24,30 +24,30 @@ const messages = {
     },
     sidebar: {
       cockpit: "Dein Fahrzeug-Cockpit",
-      menuOpen: "Menue oeffnen",
+      menuOpen: "Menü öffnen",
       subtitle: "Smart Autoverwaltung",
       tagline: "Kosten, Wartung und Export zentral steuern.",
       nav: {
-        dashboard: { label: "Dashboard", hint: "Uebersicht" },
+        dashboard: { label: "Dashboard", hint: "übersicht" },
         vehicles: { label: "Fahrzeuge", hint: "Bestand" },
         costs: { label: "Kosten", hint: "Erfassen" },
-        reminders: { label: "Erinnerungen", hint: "Faelligkeiten" },
+        reminders: { label: "Erinnerungen", hint: "Fälligkeiten" },
         export: { label: "Export", hint: "CSV" },
         settings: { label: "Einstellungen", hint: "Profil" },
       },
     },
     loginPage: {
       title: "Anmelden",
-      eyebrow: "Willkommen zurueck",
+      eyebrow: "Willkommen zurück",
       heroTitle: "Dein Autoalltag, klar organisiert",
       heroCopy:
-        "Behalte Kosten, Wartung und naechste Aufgaben im Blick. Nach dem Login landest du direkt im Dashboard.",
+        "Behalte Kosten, Wartung und nächste Aufgaben im Blick. Nach der Anmeldung landest du direkt im Dashboard.",
       bullets: [
         "Monatliche Kosten auf einen Blick",
         "Erinnerungen nach Datum oder Kilometerstand",
-        "CSV-Export fuer Auswertungen",
+        "CSV-Export für Auswertungen",
       ],
-      leadCopy: "Melde dich an und setze dort fort, wo du zuletzt aufgehoert hast.",
+      leadCopy: "Melde dich an und setze dort fort, wo du zuletzt aufgehört hast.",
       noAccount: "Noch kein Konto?",
       registerCta: "In 2 Minuten registrieren",
     },
@@ -64,23 +64,23 @@ const messages = {
       eyebrow: "Neues Konto",
       heroTitle: "Starte mit deinem digitalen Fahrzeugbuch",
       heroCopy:
-        "Erstelle dein Konto und erfasse sofort dein erstes Fahrzeug. Die wichtigsten Workflows sind direkt im Dashboard erklaert.",
+        "Erstelle dein Konto und erfasse sofort dein erstes Fahrzeug. Die wichtigsten Abläufe sind direkt im Dashboard erklärt.",
       steps: [
-        "1. Konto anlegen und E-Mail bestaetigen",
+        "1. Konto anlegen und E-Mail bestätigen",
         "2. Fahrzeugprofil erstellen",
         "3. Kosten und Erinnerungen starten",
       ],
-      leadCopy: "In wenigen Schritten bist du bereit fuer dein erstes Fahrzeug.",
+      leadCopy: "In wenigen Schritten bist du bereit für dein erstes Fahrzeug.",
       haveAccount: "Schon ein Konto?",
       loginCta: "Jetzt anmelden",
     },
     registerForm: {
       success:
-        "Registrierung erfolgreich! Bitte pruefe deine E-Mails, um dein Konto zu bestaetigen.",
+        "Registrierung erfolgreich. Bitte prüfe deine E-Mails, um dein Konto zu bestätigen.",
       displayName: "Anzeigename",
       email: "E-Mail",
       password: "Passwort",
-      note: "Mit der Registrierung akzeptierst du die Speicherung deiner Fahrzeugdaten in deinem persoenlichen Konto.",
+      note: "Mit der Registrierung akzeptierst du die Speicherung deiner Fahrzeugdaten in deinem persönlichen Konto.",
       submit: "Registrieren",
       pending: "Wird registriert...",
       displayNamePlaceholder: "Max Mustermann",
@@ -90,12 +90,12 @@ const messages = {
       title: "Einstellungen",
       eyebrow: "CarMan Konto",
       copy:
-        "Verwalte deinen Anzeigenamen und pruefe deinen Tarifstatus. Aendere Profildaten zuerst hier, bevor du Exporte oder Fahrzeuggrenzen pruefst.",
+        "Verwalte deinen Anzeigenamen und prüfe deinen Tarifstatus. Ändere Profildaten zuerst hier, bevor du Exporte oder Fahrzeuggrenzen prüfst.",
       profileTitle: "Profil",
       email: "E-Mail",
       memberSince: "Mitglied seit",
       subscriptionTitle: "Abonnement",
-      upgradeCopy: "Upgrade auf Pro fuer unbegrenzte Fahrzeuge, Datenexport und mehr.",
+      upgradeCopy: "Upgrade auf Pro für unbegrenzte Fahrzeuge, Datenexport und mehr.",
     },
     settingsForm: {
       success: "Profil aktualisiert.",
@@ -105,25 +105,35 @@ const messages = {
       eyebrow: "CarMan Dashboard",
       title: "Alles Wichtige zu deinen Fahrzeugen",
       copy:
-        "Starte deinen Tages-Workflow hier: erst offene Erinnerungen pruefen, dann neue Kosten erfassen und zuletzt Export oder Einstellungen anpassen.",
+        "Starte deinen Tagesablauf hier: zuerst offene Erinnerungen prüfen, dann neue Kosten erfassen und zuletzt Export oder Einstellungen anpassen.",
+      connectionTitle: "Persönlicher Check-in",
+      connectionCopy: "Ein schneller Blick auf dein aktives Fahrzeug, damit du sofort weißt, was als Nächstes wichtig ist.",
+      focusVehicleLabel: "Fokusfahrzeug",
+      lastActivityLabel: "Letzte Aktivität",
+      nextReminderLabel: "Nächste Erinnerung",
+      connectionScoreLabel: "Nähe-Score",
+      connectionScoreHint: "Je vollständiger und aktueller dein Profil ist, desto besser werden spätere Empfehlungen.",
+      openVehicleCta: "Fahrzeugprofil öffnen",
+      noRecentActivity: "Noch keine aktuelle Aktivität",
+      noUpcomingReminder: "Keine offene Erinnerung",
       addCost: "Kosten erfassen",
       addReminder: "Erinnerung anlegen",
-      addVehicle: "Fahrzeug hinzufuegen",
+      addVehicle: "Fahrzeug hinzufügen",
       currentCosts: "Kosten aktuell",
       previousCosts: "Kosten Vormonat",
       vehicleCount: "Fahrzeuge",
       openReminders: "Offene Erinnerungen",
       noVehicles: "Noch keine Fahrzeuge vorhanden.",
-      firstVehicle: "Erstes Fahrzeug hinzufuegen",
+      firstVehicle: "Erstes Fahrzeug hinzufügen",
       yourVehicles: "Deine Fahrzeuge",
-      openCardHint: "Karte oeffnen fuer Details",
+      openCardHint: "Karte öffnen für Details",
       costsLabel: "Kosten",
       widgetsTitle: "Dashboard anpassen",
       widgetsCopy: "Blende Auswertungen ein oder aus, um deinen Fokus zu steuern",
       widgetCostsTrend: "Kostenverlauf",
       widgetCategoryMix: "Kategorienmix",
       widgetReminderTimeline: "Erinnerungen Zeitachse",
-      noChartData: "Noch zu wenig Daten fuer eine Auswertung",
+      noChartData: "Noch zu wenig Daten für eine Auswertung",
     },
   },
   en: {
@@ -166,7 +176,7 @@ const messages = {
       eyebrow: "Welcome back",
       heroTitle: "Your car routine, clearly organized",
       heroCopy:
-        "Keep track of costs, maintenance, and next tasks. After login you land directly on the dashboard.",
+        "Keep track of costs, maintenance, and upcoming tasks. After signing in, you are taken straight to the dashboard.",
       bullets: [
         "Monthly costs at a glance",
         "Reminders by date or mileage",
@@ -229,7 +239,17 @@ const messages = {
       eyebrow: "CarMan Dashboard",
       title: "Everything important about your vehicles",
       copy:
-        "Start your daily workflow here: check open reminders first, then add new costs, and finally adjust export or settings.",
+        "Start your daily flow here: check open reminders first, then add new costs, and finally adjust export or settings.",
+      connectionTitle: "Personal check-in",
+      connectionCopy: "A quick view of your active vehicle so you instantly know what matters next.",
+      focusVehicleLabel: "Focus vehicle",
+      lastActivityLabel: "Last activity",
+      nextReminderLabel: "Next reminder",
+      connectionScoreLabel: "Connection score",
+      connectionScoreHint: "The more complete and up to date your profile is, the better future recommendations can become.",
+      openVehicleCta: "Open vehicle profile",
+      noRecentActivity: "No recent activity yet",
+      noUpcomingReminder: "No open reminder",
       addCost: "Add cost",
       addReminder: "Add reminder",
       addVehicle: "Add vehicle",
@@ -255,3 +275,5 @@ const messages = {
 export function getDictionary(locale: Locale) {
   return messages[locale];
 }
+
+

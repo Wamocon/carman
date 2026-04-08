@@ -1,20 +1,28 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  CostIcon,
+  DashboardIcon,
+  ExportIcon,
+  ReminderIcon,
+  SettingsIcon,
+  VehicleIcon,
+} from "@/components/Icons";
 import { PreferenceSwitches } from "@/components/PreferenceSwitches";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale, Theme } from "@/lib/preferences";
 import type { UserProfile } from "@/types/domain";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", key: "dashboard", icon: "📊" },
-  { href: "/vehicles", key: "vehicles", icon: "🚗" },
-  { href: "/costs", key: "costs", icon: "💶" },
-  { href: "/reminders", key: "reminders", icon: "🔔" },
-  { href: "/export", key: "export", icon: "📄" },
-  { href: "/settings", key: "settings", icon: "⚙️" },
+  { href: "/dashboard", key: "dashboard", icon: DashboardIcon },
+  { href: "/vehicles", key: "vehicles", icon: VehicleIcon },
+  { href: "/costs", key: "costs", icon: CostIcon },
+  { href: "/reminders", key: "reminders", icon: ReminderIcon },
+  { href: "/export", key: "export", icon: ExportIcon },
+  { href: "/settings", key: "settings", icon: SettingsIcon },
 ] as const;
 
 export function Sidebar({
@@ -75,8 +83,8 @@ export function Sidebar({
         <nav className="flex-1 space-y-1.5 px-3 py-4">
           {NAV_ITEMS.map((item) => {
             const active = pathname.startsWith(item.href);
-            const navLabel = t.sidebar.nav[item.key].label;
             const navHint = t.sidebar.nav[item.key].hint;
+            const Icon = item.icon;
             return (
               <Link
                 key={item.href}
@@ -88,8 +96,7 @@ export function Sidebar({
                     : "text-foreground/72 hover:bg-foreground/5 hover:text-foreground"
                 }`}
               >
-                <span className="text-base">{item.icon}</span>
-                <span className="flex-1">{navLabel}</span>
+                <span className="text-base"><Icon className="h-5 w-5" /></span>
                 <span
                   className={`text-[11px] ${
                     active ? "text-white/85" : "text-muted group-hover:text-foreground/70"
@@ -145,3 +152,5 @@ export function Sidebar({
     </>
   );
 }
+
+

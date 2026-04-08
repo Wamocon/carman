@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+﻿import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Sidebar } from "@/components/Sidebar";
 import { getPreferencesFromCookies } from "@/lib/preferences.server";
@@ -55,3 +55,4 @@ export default async function AppLayout({
     </div>
   );
 }
+

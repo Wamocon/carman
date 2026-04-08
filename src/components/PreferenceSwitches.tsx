@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { ChevronDownIcon } from "@/components/Icons";
 import { LOCALE_COOKIE, THEME_COOKIE, type Locale, type Theme } from "@/lib/preferences";
 import { getDictionary } from "@/lib/i18n";
 
@@ -92,9 +93,13 @@ export function PreferenceSwitches({
             <option value="de">{t.common.german}</option>
             <option value="en">{t.common.english}</option>
           </select>
-          <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-foreground/50">▾</span>
+          <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-foreground/50">
+            <ChevronDownIcon className="h-4 w-4" />
+          </span>
         </div>
       </div>
     </div>
   );
 }
+
+

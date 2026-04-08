@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, type FormEvent } from "react";
 import { createCostEntry } from "./actions";
 import type { Vehicle, CostCategory } from "@/types/domain";
 
@@ -19,10 +19,16 @@ export function NewCostForm({
   vehicles,
   defaultVehicleId,
   defaultCategory,
+  defaultReminderId,
+  defaultTitle,
+  defaultNotes,
 }: {
   vehicles: Vehicle[];
   defaultVehicleId?: string;
   defaultCategory?: string;
+  defaultReminderId?: string;
+  defaultTitle?: string;
+  defaultNotes?: string;
 }) {
   const [state, formAction, pending] = useActionState(createCostEntry, {
     error: null as string | null,
@@ -31,7 +37,7 @@ export function NewCostForm({
 
   const isFuel = category === "fuel";
 
-  const clampInput = (event: React.FormEvent<HTMLInputElement>) => {
+  const clampInput = (event: FormEvent<HTMLInputElement>) => {
     const input = event.currentTarget;
     if (!input.value) return;
 
@@ -54,11 +60,19 @@ export function NewCostForm({
 
   return (
     <form action={formAction} className="space-y-4">
+      {defaultReminderId ? <input type="hidden" name="reminder_id" value={defaultReminderId} /> : null}
+
       {state.error && (
         <div className="rounded-xl border border-danger/20 bg-danger/10 p-3 text-sm text-danger">
           {state.error}
         </div>
       )}
+
+      {defaultReminderId ? (
+        <div className="rounded-xl border border-brand/20 bg-brand/10 p-3 text-sm text-foreground/85">
+          Dieser Eintrag wird mit einer Erinnerung verknüpft. Nach dem Speichern wird die Fälligkeit automatisch als erledigt markiert.
+        </div>
+      ) : null}
 
       <div>
         <label htmlFor="vehicle_id" className="block text-sm font-medium text-foreground">
@@ -108,6 +122,7 @@ export function NewCostForm({
           name="title"
           type="text"
           required
+          defaultValue={defaultTitle}
           className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
       </div>
@@ -211,6 +226,7 @@ export function NewCostForm({
           id="notes"
           name="notes"
           rows={3}
+          defaultValue={defaultNotes}
           className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
       </div>
@@ -222,8 +238,10 @@ export function NewCostForm({
         disabled={pending}
         className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
       >
-        {pending ? "Wird gespeichert…" : "Eintrag speichern"}
+        {pending ? "Wird gespeichert..." : "Eintrag speichern"}
       </button>
     </form>
   );
 }
+
+

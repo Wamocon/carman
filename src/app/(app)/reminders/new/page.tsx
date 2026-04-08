@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import type { Vehicle } from "@/types/domain";
 import { NewReminderForm } from "./NewReminderForm";
 
@@ -52,3 +52,5 @@ export default async function NewReminderPage(props: {
     </div>
   );
 }
+
+

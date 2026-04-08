@@ -1,4 +1,4 @@
-import { createServerClient } from "@supabase/ssr";
+﻿import { createServerClient } from "@supabase/ssr";
 import { type NextRequest, NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/register", "/auth/callback"];
@@ -50,3 +50,4 @@ export async function updateSession(request: NextRequest) {
 
   return response;
 }
+

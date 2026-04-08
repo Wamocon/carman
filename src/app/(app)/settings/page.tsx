@@ -1,4 +1,4 @@
-import { PreferenceSwitches } from "@/components/PreferenceSwitches";
+﻿import { PreferenceSwitches } from "@/components/PreferenceSwitches";
 import { getDictionary } from "@/lib/i18n";
 import { getPreferencesFromCookies } from "@/lib/preferences.server";
 import { createClient } from "@/lib/supabase/server";
@@ -85,3 +85,5 @@ export default async function SettingsPage() {
     </div>
   );
 }
+
+

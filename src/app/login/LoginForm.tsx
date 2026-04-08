@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useActionState } from "react";
 import { getDictionary } from "@/lib/i18n";
@@ -60,3 +60,4 @@ export function LoginForm({ error, locale }: { error?: string; locale: Locale })
     </form>
   );
 }
+

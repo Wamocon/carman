@@ -1,4 +1,4 @@
-import { cookies } from "next/headers";
+﻿import { cookies } from "next/headers";
 import {
   LOCALE_COOKIE,
   THEME_COOKIE,
@@ -26,3 +26,4 @@ export async function getPreferencesFromCookies(): Promise<{ theme: Theme; local
     locale: resolveLocale(cookieStore.get(LOCALE_COOKIE)?.value),
   };
 }
+

@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useTransition } from "react";
 import { toggleReminder } from "./actions";
@@ -37,3 +37,4 @@ export function ReminderToggle({
     </button>
   );
 }
+

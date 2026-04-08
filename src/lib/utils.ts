@@ -1,4 +1,4 @@
-import type { SubscriptionTier } from "@/types/domain";
+﻿import type { SubscriptionTier } from "@/types/domain";
 import type { Locale } from "@/lib/preferences";
 
 const VEHICLE_LIMITS: Record<SubscriptionTier, number> = {
@@ -46,3 +46,4 @@ export function formatNumber(
     maximumFractionDigits: decimals,
   }).format(n);
 }
+

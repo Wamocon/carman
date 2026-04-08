@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+﻿import { createClient } from "@/lib/supabase/server";
 import type { Vehicle } from "@/types/domain";
 import { NewCostForm } from "./NewCostForm";
 
@@ -7,7 +7,13 @@ export const metadata = {
 };
 
 export default async function NewCostPage(props: {
-  searchParams: Promise<{ vehicle_id?: string; category?: string }>;
+  searchParams: Promise<{
+    vehicle_id?: string;
+    category?: string;
+    reminder_id?: string;
+    title?: string;
+    notes?: string;
+  }>;
 }) {
   const searchParams = await props.searchParams;
   const supabase = await createClient();
@@ -48,8 +54,13 @@ export default async function NewCostPage(props: {
           vehicles={allVehicles}
           defaultVehicleId={searchParams.vehicle_id}
           defaultCategory={searchParams.category}
+          defaultReminderId={searchParams.reminder_id}
+          defaultTitle={searchParams.title}
+          defaultNotes={searchParams.notes}
         />
       </section>
     </div>
   );
 }
+
+

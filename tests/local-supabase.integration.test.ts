@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Client as PgClient } from "pg";
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -9,6 +9,79 @@ const databaseUrl = process.env.DATABASE_URL;
 
 if (!supabaseUrl || !serviceRoleKey || !databaseUrl) {
   throw new Error("Fehlende lokale Supabase-Variablen. Fuehre zuerst npm run supabase:start aus.");
+}
+
+function isRetryableAuthError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const status = (error as { status?: number }).status;
+  return status === 502 || status === 503 || status === 504;
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withAuthRetry<T>(task: () => Promise<T>): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    try {
+      const result = await task();
+      const maybeError =
+        typeof result === "object" && result !== null && "error" in result
+          ? (result as { error?: unknown }).error
+          : null;
+
+      if (maybeError && isRetryableAuthError(maybeError)) {
+        throw maybeError;
+      }
+
+      return result;
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableAuthError(error) || attempt === 5) {
+        throw error;
+      }
+
+      const delayMs = 400 * (attempt + 1);
+      await new Promise((resolve) => setTimeout(resolve, delayMs));
+    }
+  }
+
+  throw lastError;
+}
+
+async function waitForAuthAdminReady(
+  supabase: SupabaseClient,
+): Promise<void> {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    try {
+      const { error } = await withAuthRetry(() =>
+        supabase.auth.admin.listUsers({ page: 1, perPage: 1 }),
+      );
+
+      if (!error) {
+        return;
+      }
+
+      if (!isRetryableAuthError(error)) {
+        throw error;
+      }
+
+      lastError = error;
+    } catch (error) {
+      if (!isRetryableAuthError(error)) {
+        throw error;
+      }
+
+      lastError = error;
+    }
+
+    await sleep(1000 + attempt * 250);
+  }
+
+  throw new Error(`Supabase Auth Admin blieb nicht erreichbar (${String(lastError)}).`);
 }
 
 test("local postgres accepts direct connections", async () => {
@@ -28,17 +101,21 @@ test("local supabase can create and read app data", async (t) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
+  await waitForAuthAdminReady(supabase);
+
   const email = `integration-${Date.now()}@local.test`;
   const password = "Integration123!";
   let userId: string | null = null;
 
   await t.test("create auth user and profile", async () => {
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true,
-      user_metadata: { display_name: "Integration Test" },
-    });
+    const { data, error } = await withAuthRetry(() =>
+      supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+        user_metadata: { display_name: "Integration Test" },
+      }),
+    );
 
     assert.equal(error, null);
     userId = data.user?.id ?? null;
@@ -94,9 +171,181 @@ test("local supabase can create and read app data", async (t) => {
     assert.equal(deleteVehicleError, null);
   });
 
+  await t.test("insert cost detail data with comments and invoices", async () => {
+    assert.ok(userId);
+
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from("vehicles")
+      .insert({
+        user_id: userId,
+        make: "Detail",
+        model: "Case",
+        year: 2023,
+        fuel_type: "diesel",
+        license_plate: "DETAIL-1",
+        current_mileage: 45678,
+      })
+      .select("id")
+      .single();
+
+    assert.equal(vehicleError, null);
+    assert.ok(vehicle?.id);
+
+    const { data: cost, error: costError } = await supabase
+      .from("cost_entries")
+      .insert({
+        vehicle_id: vehicle?.id,
+        user_id: userId,
+        category: "maintenance",
+        title: "Inspektion Integration",
+        amount: 249.9,
+        date: "2026-04-01",
+        notes: "Integrationstest",
+      })
+      .select("id")
+      .single();
+
+    assert.equal(costError, null);
+    assert.ok(cost?.id);
+
+    const { error: commentError } = await supabase.from("cost_comments").insert({
+      cost_entry_id: cost?.id,
+      user_id: userId,
+      body: "Kommentar aus Integrationstest",
+    });
+    assert.equal(commentError, null);
+
+    const storagePath = `${userId}/${cost?.id}/integration-test.pdf`;
+    const fileBody = Buffer.from("integration invoice", "utf-8");
+    const { error: uploadError } = await supabase.storage
+      .from("cost-invoices")
+      .upload(storagePath, fileBody, {
+        contentType: "application/pdf",
+        upsert: true,
+      });
+    assert.equal(uploadError, null);
+
+    const { error: invoiceError } = await supabase.from("cost_invoices").insert({
+      cost_entry_id: cost?.id,
+      user_id: userId,
+      storage_path: storagePath,
+      file_name: "integration-test.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: fileBody.length,
+      invoice_number: "IT-0001",
+      invoice_date: "2026-04-01",
+      note: "Integrationstestbeleg",
+    });
+    assert.equal(invoiceError, null);
+
+    const { data: commentRows, error: readCommentError } = await supabase
+      .from("cost_comments")
+      .select("id")
+      .eq("cost_entry_id", cost?.id ?? "");
+    assert.equal(readCommentError, null);
+    assert.ok((commentRows ?? []).length >= 1);
+
+    const { data: invoiceRows, error: readInvoiceError } = await supabase
+      .from("cost_invoices")
+      .select("id")
+      .eq("cost_entry_id", cost?.id ?? "");
+    assert.equal(readInvoiceError, null);
+    assert.ok((invoiceRows ?? []).length >= 1);
+
+    const { error: removeError } = await supabase.storage
+      .from("cost-invoices")
+      .remove([storagePath]);
+    assert.equal(removeError, null);
+
+    const { error: cleanupVehicleError } = await supabase
+      .from("vehicles")
+      .delete()
+      .eq("id", vehicle?.id ?? "");
+    assert.equal(cleanupVehicleError, null);
+  });
+
+  await t.test("insert vehicle comments and vehicle images", async () => {
+    assert.ok(userId);
+
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from("vehicles")
+      .insert({
+        user_id: userId,
+        make: "Gallery",
+        model: "Edition",
+        year: 2025,
+        fuel_type: "petrol",
+        license_plate: "PIC-100",
+        current_mileage: 1000,
+      })
+      .select("id")
+      .single();
+
+    assert.equal(vehicleError, null);
+    assert.ok(vehicle?.id);
+
+    const { error: commentError } = await supabase.from("vehicle_comments").insert({
+      vehicle_id: vehicle?.id,
+      user_id: userId,
+      body: "Fahrzeugkommentar aus Integrationstest",
+    });
+    assert.equal(commentError, null);
+
+    const imagePath = `${userId}/${vehicle?.id}/integration-image.png`;
+    const imageBody = Buffer.from(
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgQfIYvYAAAAASUVORK5CYII=",
+      "base64",
+    );
+
+    const { error: imageUploadError } = await supabase.storage
+      .from("vehicle-images")
+      .upload(imagePath, imageBody, {
+        contentType: "image/png",
+        upsert: true,
+      });
+    assert.equal(imageUploadError, null);
+
+    const { error: imageRowError } = await supabase.from("vehicle_images").insert({
+      vehicle_id: vehicle?.id,
+      user_id: userId,
+      storage_path: imagePath,
+      file_name: "integration-image.png",
+      mime_type: "image/png",
+      file_size_bytes: imageBody.length,
+      caption: "Integrationstest-Bild",
+    });
+    assert.equal(imageRowError, null);
+
+    const { data: commentRows, error: readCommentError } = await supabase
+      .from("vehicle_comments")
+      .select("id")
+      .eq("vehicle_id", vehicle?.id ?? "");
+    assert.equal(readCommentError, null);
+    assert.ok((commentRows ?? []).length >= 1);
+
+    const { data: imageRows, error: readImageError } = await supabase
+      .from("vehicle_images")
+      .select("id")
+      .eq("vehicle_id", vehicle?.id ?? "");
+    assert.equal(readImageError, null);
+    assert.ok((imageRows ?? []).length >= 1);
+
+    const { error: removeImageError } = await supabase.storage
+      .from("vehicle-images")
+      .remove([imagePath]);
+    assert.equal(removeImageError, null);
+
+    const { error: cleanupVehicleError } = await supabase
+      .from("vehicles")
+      .delete()
+      .eq("id", vehicle?.id ?? "");
+    assert.equal(cleanupVehicleError, null);
+  });
+
   await t.test("cleanup auth user", async () => {
     assert.ok(userId);
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+    const currentUserId = userId;
+    const { error } = await withAuthRetry(() => supabase.auth.admin.deleteUser(currentUserId));
     assert.equal(error, null);
   });
 });

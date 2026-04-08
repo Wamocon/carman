@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
@@ -18,6 +18,7 @@ export async function createCostEntry(
   formData: FormData,
 ) {
   const vehicleId = formData.get("vehicle_id") as string;
+  const reminderId = (formData.get("reminder_id") as string) || null;
   const category = formData.get("category") as string;
   const title = (formData.get("title") as string)?.trim();
   const amountStr = formData.get("amount") as string;
@@ -71,6 +72,7 @@ export async function createCostEntry(
   const { error } = await supabase.from("cost_entries").insert({
     vehicle_id: vehicleId,
     user_id: user.id,
+    reminder_id: reminderId,
     category: category as CostCategory,
     title,
     amount,
@@ -83,6 +85,15 @@ export async function createCostEntry(
 
   if (error) {
     return { error: "Fehler beim Speichern. Bitte versuche es erneut." };
+  }
+
+  if (reminderId) {
+    await supabase
+      .from("reminders")
+      .update({ is_completed: true, completed_at: new Date().toISOString() })
+      .eq("id", reminderId)
+      .eq("user_id", user.id)
+      .eq("vehicle_id", vehicleId);
   }
 
   // Update vehicle mileage if new mileage is higher
@@ -103,3 +114,5 @@ export async function createCostEntry(
 
   redirect("/costs");
 }
+
+
