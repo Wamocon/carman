@@ -1,6 +1,6 @@
 # CarMan
 
-Private vehicle management — fuel, costs, maintenance, reminders — in one web app.  
+Private vehicle management — fuel, costs, maintenance, Service appointments — in one web app.  
 Built with **Next.js 16**, **TypeScript**, **Tailwind CSS v4**, and **Supabase**.
 
 ## Features (V1)
@@ -10,7 +10,7 @@ Built with **Next.js 16**, **TypeScript**, **Tailwind CSS v4**, and **Supabase**
 - Dedicated cost detail pages per entry
 - Cost comments and invoice uploads (document storage)
 - Maintenance & repair log
-- Date- and mileage-based reminders
+- Date- and mileage-based Service appointments
 - Dashboard with monthly cost overview & per-vehicle stats
 - Interactive dashboard trend chart (categories, vehicles, monthly time range)
 - CSV export (Pro)

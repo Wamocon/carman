@@ -15,7 +15,7 @@ Sinnvoll ist ein gestufter Ansatz:
 2. Danach kleine, moderierte Social-Funktionen.
 3. Oeffentliche Reichweiten-Funktionen erst spaeter.
 
-So bleibt der Fokus auf dem Kernwert von CarMan: Kosten, Wartung, Erinnerungen und nachvollziehbare Dokumentation.
+So bleibt der Fokus auf dem Kernwert von CarMan: Kosten, Wartung, Servicetermine und nachvollziehbare Dokumentation.
 
 ## Strategischer Fit
 

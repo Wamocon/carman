@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { CostEntry, Vehicle } from "@/types/domain";
 import { CostsFilter } from "./CostsFilter";
+import { ExportForm } from "../export/ExportForm";
 
 export const metadata = {
   title: "Kosten — CarMan",
@@ -26,6 +27,8 @@ export default async function CostsPage(props: {
     vehicle_id?: string;
     category?: string;
     page?: string;
+    start_date?: string;
+    end_date?: string;
   }>;
 }) {
   const searchParams = await props.searchParams;
@@ -38,7 +41,25 @@ export default async function CostsPage(props: {
 
   const page = Math.max(1, parseInt(searchParams.page ?? "1", 10) || 1);
   const offset = (page - 1) * PAGE_SIZE;
-  const hasActiveFilters = Boolean(searchParams.vehicle_id) || Boolean(searchParams.category);
+  const hasActiveFilters =
+    Boolean(searchParams.vehicle_id) ||
+    Boolean(searchParams.category) ||
+    Boolean(searchParams.start_date) ||
+    Boolean(searchParams.end_date);
+
+  const preservedParams = new URLSearchParams();
+  if (searchParams.vehicle_id) {
+    preservedParams.set("vehicle_id", searchParams.vehicle_id);
+  }
+  if (searchParams.category) {
+    preservedParams.set("category", searchParams.category);
+  }
+  if (searchParams.start_date) {
+    preservedParams.set("start_date", searchParams.start_date);
+  }
+  if (searchParams.end_date) {
+    preservedParams.set("end_date", searchParams.end_date);
+  }
 
   // Fetch vehicles for filter dropdown
   const { data: vehicles } = await supabase
@@ -74,6 +95,12 @@ export default async function CostsPage(props: {
   if (searchParams.category) {
     filteredTotalsQuery = filteredTotalsQuery.eq("category", searchParams.category);
   }
+  if (searchParams.start_date) {
+    filteredTotalsQuery = filteredTotalsQuery.gte("date", searchParams.start_date);
+  }
+  if (searchParams.end_date) {
+    filteredTotalsQuery = filteredTotalsQuery.lte("date", searchParams.end_date);
+  }
 
   const { data: filteredTotalsRaw } = await filteredTotalsQuery;
   const filteredRunningCosts = (filteredTotalsRaw ?? []).reduce(
@@ -94,6 +121,12 @@ export default async function CostsPage(props: {
   }
   if (searchParams.category) {
     query = query.eq("category", searchParams.category);
+  }
+  if (searchParams.start_date) {
+    query = query.gte("date", searchParams.start_date);
+  }
+  if (searchParams.end_date) {
+    query = query.lte("date", searchParams.end_date);
   }
 
   const { data: costEntries, count } = await query;
@@ -122,31 +155,39 @@ export default async function CostsPage(props: {
         </div>
       </section>
 
+      <section className="section-shell space-y-2 p-4 sm:p-5">
+        <p className="text-xs uppercase tracking-[0.15em] text-muted">
+          {hasActiveFilters ? "Gefilterte Kosten" : "Gesamtkosten"}
+        </p>
+        <p className="text-2xl font-semibold text-foreground">{formatCurrency(filteredRunningCosts)}</p>
+      </section>
+
       <CostsFilter
         vehicles={allVehicles}
         selectedVehicle={searchParams.vehicle_id}
         selectedCategory={searchParams.category}
+        selectedStartDate={searchParams.start_date}
+        selectedEndDate={searchParams.end_date}
       />
+
+      <section className="section-shell p-5 sm:p-6">
+        <div className="mb-4">
+          <p className="text-xs uppercase tracking-[0.2em] text-muted">CSV Export</p>
+          <h2 className="mt-2 text-xl font-semibold text-foreground">Kosten als CSV exportieren</h2>
+          <p className="mt-2 text-sm help-copy">
+            Exportiere direkt aus der Kostenverwaltung. Fahrzeug und Zeitraum kannst du im Exportformular festlegen.
+          </p>
+        </div>
+        <ExportForm vehicles={allVehicles} />
+      </section>
 
       {costs.length === 0 ? (
         <section className="section-shell space-y-2 p-4 sm:p-5">
-          <div>
-            <p className="text-xs uppercase tracking-[0.15em] text-muted">
-              {hasActiveFilters ? "Gefilterte Kosten" : "Gesamtkosten"}
-            </p>
-            <p className="mt-1 text-2xl font-semibold text-foreground">{formatCurrency(filteredRunningCosts)}</p>
-          </div>
           <p className="text-sm text-muted">Keine Kosteneinträge vorhanden.</p>
         </section>
       ) : (
         <>
           <div className="section-shell overflow-x-auto p-4 sm:p-5">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <p className="text-xs uppercase tracking-[0.15em] text-muted">
-                {hasActiveFilters ? "Gefilterte Kosten" : "Gesamtkosten"}
-              </p>
-              <p className="text-lg font-semibold text-foreground">{formatCurrency(filteredRunningCosts)}</p>
-            </div>
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border text-left">
@@ -183,7 +224,7 @@ export default async function CostsPage(props: {
             <div className="flex items-center justify-center gap-2">
               {page > 1 && (
                 <Link
-                  href={`/costs?page=${page - 1}${searchParams.vehicle_id ? `&vehicle_id=${searchParams.vehicle_id}` : ""}${searchParams.category ? `&category=${searchParams.category}` : ""}`}
+                  href={`/costs?page=${page - 1}${preservedParams.toString() ? `&${preservedParams.toString()}` : ""}`}
                   className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm hover:bg-foreground/5"
                 >
                   Zurück
@@ -194,7 +235,7 @@ export default async function CostsPage(props: {
               </span>
               {page < totalPages && (
                 <Link
-                  href={`/costs?page=${page + 1}${searchParams.vehicle_id ? `&vehicle_id=${searchParams.vehicle_id}` : ""}${searchParams.category ? `&category=${searchParams.category}` : ""}`}
+                  href={`/costs?page=${page + 1}${preservedParams.toString() ? `&${preservedParams.toString()}` : ""}`}
                   className="rounded-xl border border-border bg-card px-3 py-1.5 text-sm hover:bg-foreground/5"
                 >
                   Weiter

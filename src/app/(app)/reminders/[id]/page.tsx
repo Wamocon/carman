@@ -18,7 +18,7 @@ const CATEGORY_LABELS: Record<string, string> = {
 };
 
 export const metadata = {
-  title: "Erinnerung bearbeiten — CarMan",
+  title: "Servicetermin bearbeiten — CarMan",
 };
 
 export default async function ReminderDetailPage(props: {
@@ -79,15 +79,15 @@ export default async function ReminderDetailPage(props: {
     ? "maintenance"
     : "other";
 
-  const defaultCostNotes = `Erfasst aus Erinnerung: ${currentReminder.title}`;
+  const defaultCostNotes = `Erfasst aus Servicetermin: ${currentReminder.title}`;
 
   return (
     <div className="space-y-6">
       <section className="section-shell p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <Link href="/reminders" className="text-sm text-muted hover:text-foreground">
-              ← Zurück zu Erinnerungen
+            <Link href="/servicetermine" className="text-sm text-muted hover:text-foreground">
+              ← Zurück zu Serviceterminen
             </Link>
             <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">{currentReminder.title}</h1>
             <p className="mt-2 text-sm text-muted">
@@ -98,7 +98,7 @@ export default async function ReminderDetailPage(props: {
             href={`/costs/new?vehicle_id=${currentReminder.vehicle_id}&category=${defaultCostCategory}&reminder_id=${currentReminder.id}&title=${encodeURIComponent(currentReminder.title)}&notes=${encodeURIComponent(defaultCostNotes)}`}
             className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
           >
-            Kosten aus dieser Erinnerung erfassen
+            Kosten aus diesem Servicetermin erfassen
           </Link>
         </div>
       </section>
@@ -124,7 +124,7 @@ export default async function ReminderDetailPage(props: {
 
       <section className="section-shell space-y-4 p-5 sm:p-6">
         <div>
-          <h2 className="text-lg font-semibold text-foreground">Fälligkeit bearbeiten</h2>
+          <h2 className="text-lg font-semibold text-foreground">Servicetermin bearbeiten</h2>
           <p className="mt-1 text-sm text-muted">Passe Termin, Laufleistung und Status an. Die globalen Fahrzeuginformationen bleiben erhalten, die Aufgabe selbst bleibt fokussiert bearbeitbar.</p>
         </div>
         <NewReminderForm
@@ -140,7 +140,7 @@ export default async function ReminderDetailPage(props: {
       <section className="section-shell space-y-4 p-5 sm:p-6">
         <div>
           <h2 className="text-lg font-semibold text-foreground">Kosten verknüpfen</h2>
-          <p className="mt-1 text-sm text-muted">Nutze einen bestehenden Kosteneintrag oder erfasse direkt einen neuen. Beim Verknüpfen wird die Erinnerung automatisch als erledigt markiert.</p>
+          <p className="mt-1 text-sm text-muted">Nutze einen bestehenden Kosteneintrag oder erfasse direkt einen neuen. Beim Verknüpfen wird der Servicetermin automatisch als erledigt markiert.</p>
         </div>
 
         <form action={submitLinkReminderToCost} className="grid gap-3 rounded-xl border border-border/70 bg-card/60 p-4 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -162,7 +162,7 @@ export default async function ReminderDetailPage(props: {
         </form>
 
         {linkedCostEntries.length === 0 ? (
-          <p className="text-sm text-muted">Noch keine Kosten mit dieser Erinnerung verknüpft.</p>
+          <p className="text-sm text-muted">Noch keine Kosten mit diesem Servicetermin verknüpft.</p>
         ) : (
           <ul className="space-y-2">
             {linkedCostEntries.map((costEntry) => (

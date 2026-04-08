@@ -1,6 +1,7 @@
 ﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CommentForm } from "./CommentForm";
+import { EditCostForm } from "./EditCostForm";
 import { InvoiceUploadForm } from "./InvoiceUploadForm";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
@@ -113,6 +114,16 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
           <p className="text-xs uppercase tracking-[0.15em] text-muted">Kilometerstand</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">{costEntry.mileage ? `${costEntry.mileage.toLocaleString("de-DE")} km` : "-"}</p>
         </div>
+      </section>
+
+      <section className="section-shell space-y-4 p-5 sm:p-6">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Kosten bearbeiten</h2>
+          <p className="mt-1 text-sm text-muted">
+            Falls Daten fehlen oder nachträglich angepasst werden müssen, kannst du den Eintrag hier direkt aktualisieren.
+          </p>
+        </div>
+        <EditCostForm costEntry={costEntry} />
       </section>
 
       {costEntry.notes ? (

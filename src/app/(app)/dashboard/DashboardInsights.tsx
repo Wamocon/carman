@@ -207,7 +207,7 @@ export function DashboardInsights({
           <article className="surface rounded-xl p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-foreground">{t.dashboard.widgetReminderTimeline}</h3>
-              <Link href="/dashboard/reminder-timeline" className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5" aria-label="Erinnerungszeitachse vergrößern">
+              <Link href="/dashboard/reminder-timeline" className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5" aria-label="Servicetermin-Zeitachse vergrößern">
                 <ExpandIcon className="h-4 w-4" />
               </Link>
             </div>

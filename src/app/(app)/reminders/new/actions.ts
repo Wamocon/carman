@@ -23,7 +23,7 @@ export async function createReminder(
   }
 
   if (!VALID_TYPES.has(reminderType)) {
-    return { error: "Ungültige Erinnerungsart." };
+    return { error: "Ungültige Terminart." };
   }
 
   const dueMileage = dueMileageStr ? parseInt(dueMileageStr, 10) : null;
@@ -55,7 +55,7 @@ export async function createReminder(
     return { error: "Fehler beim Speichern. Bitte versuche es erneut." };
   }
 
-  redirect("/reminders");
+  redirect("/servicetermine");
 }
 
 

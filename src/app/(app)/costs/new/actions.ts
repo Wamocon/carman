@@ -13,6 +13,22 @@ const MAX_MILEAGE = 9999999;
 const MAX_LITERS = 999.999;
 const MAX_PRICE_PER_LITER = 99.999;
 
+function toErrorMessage(error: { code?: string; message?: string } | null) {
+  if (!error) {
+    return "Fehler beim Speichern. Bitte versuche es erneut.";
+  }
+
+  if (error.code === "23503") {
+    return "Der verknüpfte Servicetermin existiert nicht mehr. Bitte aktualisiere die Seite.";
+  }
+
+  if (error.code === "23514") {
+    return "Der Servicetermin passt nicht zum ausgewählten Fahrzeug. Bitte starte den Vorgang erneut aus der Servicetermin-Ansicht.";
+  }
+
+  return "Fehler beim Speichern. Bitte versuche es erneut.";
+}
+
 export async function createCostEntry(
   _prevState: { error: string | null },
   formData: FormData,
@@ -69,46 +85,106 @@ export async function createCostEntry(
     return { error: "Nicht angemeldet." };
   }
 
-  const { error } = await supabase.from("cost_entries").insert({
-    vehicle_id: vehicleId,
-    user_id: user.id,
-    reminder_id: reminderId,
-    category: category as CostCategory,
-    title,
-    amount,
-    date,
-    mileage,
-    liters,
-    price_per_liter: pricePerLiter,
-    notes,
-  });
+  const { data: vehicle, error: vehicleError } = await supabase
+    .from("vehicles")
+    .select("id, current_mileage")
+    .eq("id", vehicleId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (vehicleError || !vehicle) {
+    return { error: "Fahrzeug nicht gefunden oder keine Berechtigung." };
+  }
+
+  let effectiveVehicleId = vehicleId;
+
+  if (reminderId) {
+    const { data: reminder, error: reminderError } = await supabase
+      .from("reminders")
+      .select("id, vehicle_id")
+      .eq("id", reminderId)
+      .eq("user_id", user.id)
+      .single();
+
+    if (reminderError || !reminder) {
+      return { error: "Der verknüpfte Servicetermin wurde nicht gefunden." };
+    }
+
+    if (reminder.vehicle_id !== vehicleId) {
+      return {
+        error:
+          "Dieser Servicetermin gehört zu einem anderen Fahrzeug. Bitte öffne den Kosteneintrag erneut direkt aus dem Servicetermin.",
+      };
+    }
+
+    effectiveVehicleId = reminder.vehicle_id;
+  }
+
+  const { data: insertedCostEntry, error } = await supabase
+    .from("cost_entries")
+    .insert({
+      vehicle_id: effectiveVehicleId,
+      user_id: user.id,
+      reminder_id: reminderId,
+      category: category as CostCategory,
+      title,
+      amount,
+      date,
+      mileage,
+      liters,
+      price_per_liter: pricePerLiter,
+      notes,
+    })
+    .select("id")
+    .single();
 
   if (error) {
-    return { error: "Fehler beim Speichern. Bitte versuche es erneut." };
+    console.error("createCostEntry insert failed", {
+      code: error.code,
+      message: error.message,
+      userId: user.id,
+      vehicleId: effectiveVehicleId,
+      reminderId,
+    });
+
+    return { error: toErrorMessage(error) };
   }
 
   if (reminderId) {
-    await supabase
+    const { error: reminderUpdateError } = await supabase
       .from("reminders")
       .update({ is_completed: true, completed_at: new Date().toISOString() })
       .eq("id", reminderId)
       .eq("user_id", user.id)
-      .eq("vehicle_id", vehicleId);
+      .eq("vehicle_id", effectiveVehicleId);
+
+    if (reminderUpdateError) {
+      console.error("createCostEntry reminder update failed", {
+        code: reminderUpdateError.code,
+        message: reminderUpdateError.message,
+        userId: user.id,
+        vehicleId: effectiveVehicleId,
+        reminderId,
+        costEntryId: insertedCostEntry.id,
+      });
+
+      await supabase.from("cost_entries").delete().eq("id", insertedCostEntry.id).eq("user_id", user.id);
+
+      return {
+        error:
+          "Die Kosten wurden nicht gespeichert, weil der Servicetermin nicht aktualisiert werden konnte. Bitte versuche es erneut.",
+      };
+    }
   }
 
   // Update vehicle mileage if new mileage is higher
   if (mileage !== null) {
-    const { data: vehicle } = await supabase
-      .from("vehicles")
-      .select("current_mileage")
-      .eq("id", vehicleId)
-      .single();
-
     if (vehicle && mileage > vehicle.current_mileage) {
       await supabase
         .from("vehicles")
         .update({ current_mileage: mileage })
-        .eq("id", vehicleId);
+        .eq("id", effectiveVehicleId)
+        .eq("user_id", user.id);
     }
   }
 

@@ -40,7 +40,7 @@ const CATEGORY_LABELS: Record<CostCategory, string> = {
 const VEHICLE_TABS = [
   { key: "overview", label: "Überblick" },
   { key: "costs", label: "Kosten" },
-  { key: "reminders", label: "Erinnerungen" },
+  { key: "reminders", label: "Servicetermine" },
   { key: "media", label: "Medien" },
   { key: "details", label: "Stammdaten" },
 ] as const;
@@ -258,7 +258,7 @@ export default async function VehicleDetailPage(props: {
             </p>
             <p className="mt-3 max-w-2xl text-sm help-copy">
               Die Fahrzeugidentität bleibt immer sichtbar. Darunter wechselst du
-              per Reiter gezielt zwischen Überblick, Kosten, Erinnerungen,
+              per Reiter gezielt zwischen Überblick, Kosten, Serviceterminen,
               Medien und Stammdaten.
             </p>
 
@@ -276,10 +276,10 @@ export default async function VehicleDetailPage(props: {
                 Wartung
               </Link>
               <Link
-                href={`/reminders/new?vehicle_id=${v.id}`}
+                href={`/servicetermine/new?vehicle_id=${v.id}`}
                 className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5"
               >
-                Erinnerung
+                Servicetermin
               </Link>
               <Link
                 href="?tab=media"
@@ -329,10 +329,10 @@ export default async function VehicleDetailPage(props: {
         </div>
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">
-            Erinnerungskosten
+            Serviceterminkosten
           </p>
           <p className="mt-2 text-sm text-muted">
-            Kosten mit verknüpfter Fälligkeit
+            Kosten mit verknüpftem Servicetermin
           </p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
             {linkedReminderCount}
@@ -399,7 +399,7 @@ export default async function VehicleDetailPage(props: {
               </div>
               <div className="rounded-xl border border-border/70 bg-card/70 p-3">
                 <p className="text-xs uppercase tracking-[0.12em] text-muted">
-                  Offene Erinnerungen
+                  Offene Servicetermine
                 </p>
                 <p className="mt-1 text-2xl font-semibold text-foreground">
                   {allReminders.filter((reminder) => !reminder.is_completed).length}
@@ -507,10 +507,10 @@ export default async function VehicleDetailPage(props: {
 
             <section className="section-shell space-y-3 p-5 sm:p-6">
               <h2 className="text-lg font-semibold text-foreground">
-                Erinnerungen
+                Servicetermine
               </h2>
               {allReminders.length === 0 ? (
-                <p className="text-sm text-muted">Keine Erinnerungen vorhanden.</p>
+                <p className="text-sm text-muted">Keine Servicetermine vorhanden.</p>
               ) : (
                 <ul className="space-y-2">
                   {allReminders.slice(0, 6).map((reminder) => (
@@ -525,7 +525,7 @@ export default async function VehicleDetailPage(props: {
                           </p>
                           <p className="text-xs text-muted">
                             {reminder.due_date
-                              ? `Fällig: ${formatDate(reminder.due_date, locale)}`
+                              ? `Termin: ${formatDate(reminder.due_date, locale)}`
                               : "Kein Datum"}
                             {reminder.due_mileage
                               ? ` · ${reminder.due_mileage.toLocaleString("de-DE")} km`
@@ -533,7 +533,7 @@ export default async function VehicleDetailPage(props: {
                           </p>
                         </div>
                         <Link
-                          href={`/reminders/${reminder.id}`}
+                          href={`/servicetermine/${reminder.id}`}
                           className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
                         >
                           Öffnen
@@ -566,7 +566,7 @@ export default async function VehicleDetailPage(props: {
                       <th className="pb-2 pr-4 font-medium text-muted">Datum</th>
                       <th className="pb-2 pr-4 font-medium text-muted">Kategorie</th>
                       <th className="pb-2 pr-4 font-medium text-muted">Titel</th>
-                      <th className="pb-2 pr-4 font-medium text-muted">Erinnerung</th>
+                      <th className="pb-2 pr-4 font-medium text-muted">Servicetermin</th>
                       <th className="pb-2 text-right font-medium text-muted">Betrag</th>
                     </tr>
                   </thead>
@@ -608,7 +608,7 @@ export default async function VehicleDetailPage(props: {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <h2 className="text-lg font-semibold text-foreground">
-                Erinnerungen und Fälligkeiten
+                Servicetermine und Intervalle
               </h2>
               <p className="mt-1 text-sm text-muted">
                 Jede Aufgabe kann direkt zu einem Kosteneintrag führen oder mit
@@ -616,15 +616,15 @@ export default async function VehicleDetailPage(props: {
               </p>
             </div>
             <Link
-              href={`/reminders/new?vehicle_id=${v.id}`}
+              href={`/servicetermine/new?vehicle_id=${v.id}`}
               className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
             >
-              Neue Erinnerung
+              Neuer Servicetermin
             </Link>
           </div>
 
           {allReminders.length === 0 ? (
-            <p className="text-sm text-muted">Keine Erinnerungen vorhanden.</p>
+            <p className="text-sm text-muted">Keine Servicetermine vorhanden.</p>
           ) : (
             <div className="space-y-3">
               {allReminders.map((reminder) => (
@@ -637,7 +637,7 @@ export default async function VehicleDetailPage(props: {
                       <p className="font-medium text-foreground">{reminder.title}</p>
                       <p className="mt-1 text-sm text-muted">
                         {reminder.due_date
-                          ? `Fällig: ${formatDate(reminder.due_date, locale)}`
+                          ? `Termin: ${formatDate(reminder.due_date, locale)}`
                           : "Ohne Datum"}
                         {reminder.due_mileage
                           ? ` · ${reminder.due_mileage.toLocaleString("de-DE")} km`
@@ -650,13 +650,13 @@ export default async function VehicleDetailPage(props: {
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <Link
-                        href={`/reminders/${reminder.id}`}
+                        href={`/servicetermine/${reminder.id}`}
                         className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
                       >
                         Bearbeiten
                       </Link>
                       <Link
-                        href={`/costs/new?vehicle_id=${v.id}&category=maintenance&reminder_id=${reminder.id}&title=${encodeURIComponent(reminder.title)}&notes=${encodeURIComponent(`Erfasst aus Erinnerung: ${reminder.title}`)}`}
+                        href={`/costs/new?vehicle_id=${v.id}&category=maintenance&reminder_id=${reminder.id}&title=${encodeURIComponent(reminder.title)}&notes=${encodeURIComponent(`Erfasst aus Servicetermin: ${reminder.title}`)}`}
                         className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-strong"
                       >
                         Kosten anhängen

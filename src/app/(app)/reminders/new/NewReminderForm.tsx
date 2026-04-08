@@ -123,7 +123,7 @@ export function NewReminderForm({
 
       <div>
         <label htmlFor="reminder_type" className="block text-sm font-medium text-foreground">
-          Erinnerungsart
+          Terminart
         </label>
         <select
           id="reminder_type"
@@ -142,7 +142,7 @@ export function NewReminderForm({
       {showDate && (
         <div>
           <label htmlFor="due_date" className="block text-sm font-medium text-foreground">
-            Fälligkeitsdatum
+            Service-Datum
           </label>
           <input
             id="due_date"
@@ -196,7 +196,7 @@ export function NewReminderForm({
             defaultChecked={reminder?.is_completed ?? false}
             className="mt-0.5"
           />
-          <span>Erinnerung als erledigt markieren</span>
+          <span>Servicetermin als erledigt markieren</span>
         </label>
       ) : null}
 
@@ -207,7 +207,7 @@ export function NewReminderForm({
         disabled={pending}
         className="w-full rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:opacity-50"
       >
-        {pending ? (pendingLabel ?? "Wird gespeichert...") : (submitLabel ?? "Erinnerung erstellen")}
+        {pending ? (pendingLabel ?? "Wird gespeichert...") : (submitLabel ?? "Servicetermin erstellen")}
       </button>
     </form>
   );

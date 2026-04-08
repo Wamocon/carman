@@ -5,7 +5,7 @@ import Link from "next/link";
 import { ReminderToggle } from "./ReminderToggle";
 
 export const metadata = {
-  title: "Erinnerungen — CarMan",
+  title: "Servicetermine — CarMan",
 };
 
 export default async function RemindersPage(props: {
@@ -69,22 +69,22 @@ export default async function RemindersPage(props: {
       <section className="section-shell p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Erinnerungen</p>
-            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Fälligkeiten im Griff behalten</h1>
-            <p className="mt-2 max-w-2xl text-sm help-copy">Nutze Datum, Kilometerstand oder beides. Erledigte Aufgaben kannst du jederzeit wieder öffnen.</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Servicetermine</p>
+            <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Servicetermine im Griff behalten</h1>
+            <p className="mt-2 max-w-2xl text-sm help-copy">Nutze Datum, Kilometerstand oder beides. Erledigte Servicetermine kannst du jederzeit wieder öffnen.</p>
           </div>
           <Link
-            href="/reminders/new"
+            href="/servicetermine/new"
             className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
           >
-            Neue Erinnerung
+            Neuer Servicetermin
           </Link>
         </div>
       </section>
 
       <div>
         <Link
-          href={`/reminders?show_completed=${showCompleted ? "false" : "true"}`}
+          href={`/servicetermine?show_completed=${showCompleted ? "false" : "true"}`}
           className="text-sm text-brand hover:underline"
         >
           {showCompleted ? "Erledigte ausblenden" : "Erledigte anzeigen"}
@@ -92,7 +92,7 @@ export default async function RemindersPage(props: {
       </div>
 
       {allReminders.length === 0 ? (
-        <p className="text-sm text-muted">Keine Erinnerungen vorhanden.</p>
+        <p className="text-sm text-muted">Keine Servicetermine vorhanden.</p>
       ) : (
         <div className="space-y-6">
           {Array.from(grouped.entries()).map(([vehicleId, vehicleReminders]) => {
@@ -123,7 +123,7 @@ export default async function RemindersPage(props: {
                           {r.title}
                         </p>
                         <p className="text-sm text-muted">
-                          {r.due_date && `Fällig: ${formatDate(r.due_date)}`}
+                          {r.due_date && `Termin: ${formatDate(r.due_date)}`}
                           {r.due_date && r.due_mileage && " · "}
                           {r.due_mileage &&
                             `Bei ${r.due_mileage.toLocaleString("de-DE")} km`}
@@ -139,13 +139,13 @@ export default async function RemindersPage(props: {
                       </div>
                       <div className="flex shrink-0 flex-col gap-2">
                         <Link
-                          href={`/reminders/${r.id}`}
+                          href={`/servicetermine/${r.id}`}
                           className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
                         >
                           Bearbeiten
                         </Link>
                         <Link
-                          href={`/costs/new?vehicle_id=${r.vehicle_id}&category=maintenance&reminder_id=${r.id}&title=${encodeURIComponent(r.title)}&notes=${encodeURIComponent(`Erfasst aus Erinnerung: ${r.title}`)}`}
+                          href={`/costs/new?vehicle_id=${r.vehicle_id}&category=maintenance&reminder_id=${r.id}&title=${encodeURIComponent(r.title)}&notes=${encodeURIComponent(`Erfasst aus Servicetermin: ${r.title}`)}`}
                           className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-strong"
                         >
                           Kosten anhängen

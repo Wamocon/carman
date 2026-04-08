@@ -1,12 +1,12 @@
-ï»¿# CarMan Fahrzeugkatalog Analyse
+# CarMan Fahrzeugkatalog Analyse
 
 Stand: 2026-04-08
 
 ## Zielbild
 
-Als Fahrzeugbesitzer mÃ¶chte ich mein Fahrzeug mÃ¶glichst detailliert digital abbilden und dabei mÃ¶glichst wenig Zeit in die Dateneingabe investieren. Daraus ergeben sich zwei Anforderungen:
+Als Fahrzeugbesitzer möchte ich mein Fahrzeug möglichst detailliert digital abbilden und dabei möglichst wenig Zeit in die Dateneingabe investieren. Daraus ergeben sich zwei Anforderungen:
 
-1. GefÃ¼hrte Dateneingabe mit VorschlÃ¤gen und VorbefÃ¼llung.
+1. Geführte Dateneingabe mit Vorschlägen und Vorbefüllung.
 2. Speicherung von mehr Fahrzeugdetails als nur Marke, Modell, Baujahr und Kraftstoff.
 
 ## Ausgangslage im Projekt
@@ -19,7 +19,7 @@ Vor der Erweiterung war der Fahrzeugdatensatz bewusst schlank:
 - Kennzeichen
 - Kilometerstand
 
-Es gab keinen Referenzkatalog fÃ¼r Marken, Modelle, Varianten oder Motorisierungen. Die Eingabe war VollstÃ¤ndig manuell.
+Es gab keinen Referenzkatalog für Marken, Modelle, Varianten oder Motorisierungen. Die Eingabe war Vollständig manuell.
 
 ## Marktnahe Vollabdeckung: Realistische Einordnung
 
@@ -28,46 +28,46 @@ Eine Plattform wie mobile.de oder AutoScout24 wirkt auf den ersten Blick so, als
 - Die sichtbaren Daten sind nicht automatisch ein sauberer Masterkatalog.
 - Marktplatzdaten bestehen aus Dealer-Feeds, Freitexten, internen Taxonomien und laufender Nachbearbeitung.
 - Varianten, Sonderausstattungen und Motorisierungen sind oft marktspezifisch, historisch gewachsen und nicht konsistent benannt.
-- ZusÃ¤tzlich spielen rechtliche Fragen eine Rolle: AGB, Datenbankrechte, Nutzungsrechte, Caching und Weiterverwendung.
+- Zusätzlich spielen rechtliche Fragen eine Rolle: AGB, Datenbankrechte, Nutzungsrechte, Caching und Weiterverwendung.
 
-Fazit: Eine VollstÃ¤ndige, dauerhaft belastbare Datenbasis auf Marktplatz-Niveau ist keine einfache Copy-Paste-Aufgabe.
+Fazit: Eine Vollständige, dauerhaft belastbare Datenbasis auf Marktplatz-Niveau ist keine einfache Copy-Paste-Aufgabe.
 
 ## Datenquellen: Was ist einfach und was nicht?
 
 ### Einfach und kostenlos nutzbar
 
-Die praktikabelste kostenlose Quelle fÃ¼r einen schnellen Mehrwert ist NHTSA vPIC.
+Die praktikabelste kostenlose Quelle für einen schnellen Mehrwert ist NHTSA vPIC.
 
-StÃ¤rken:
+Stärken:
 - freie API
-- Marken und Modelle verfÃ¼gbar
-- Fahrzeugtypen verfÃ¼gbar
-- VIN-Decode verfÃ¼gbar
+- Marken und Modelle verfügbar
+- Fahrzeugtypen verfügbar
+- VIN-Decode verfügbar
 - mehrere technische Felder koennen aus der VIN abgeleitet werden
 
-SchwÃ¤chen:
+Schwächen:
 - stark US-/Nordamerika-lastig
-- keine verlÃ¤ssliche Vollabdeckung fÃ¼r DACH-Varianten
-- Sonderausstattungen sind nicht in der nÃ¶tigen Tiefe verfÃ¼gbar
-- keine echte Marktplatz-Taxonomie fÃ¼r Trim-/Ausstattungslogik
+- keine verlässliche Vollabdeckung für DACH-Varianten
+- Sonderausstattungen sind nicht in der nötigen Tiefe verfügbar
+- keine echte Marktplatz-Taxonomie für Trim-/Ausstattungslogik
 
 ### Professionell, aber nicht einfach
 
-fÃ¼r hochwertige Daten in DACH kommen eher lizenzierte Anbieter in Frage, zum Beispiel TecDoc/TecAlliance, DAT, Schwacke, JATO oder spezialisierte VIN-/OEM-Datenlieferanten.
+für hochwertige Daten in DACH kommen eher lizenzierte Anbieter in Frage, zum Beispiel TecDoc/TecAlliance, DAT, Schwacke, JATO oder spezialisierte VIN-/OEM-Datenlieferanten.
 
-StÃ¤rken:
+Stärken:
 - deutlich bessere Abdeckung
 - strukturiertere Varianten- und Motorisierungsdaten
-- geeignet fÃ¼r spÃ¤tere Produktreife
+- geeignet für spätere Produktreife
 
-SchwÃ¤chen:
+Schwächen:
 - Kosten
 - Vertrags- und Lizenzaufwand
-- Integrations- und Sync-KomplexitÃ¤t
+- Integrations- und Sync-Komplexität
 
-## Bewertung fÃ¼r CarMan
+## Bewertung für CarMan
 
-Die sinnvollste kurzfristige Strategie ist kein Vollkatalogprojekt, sondern ein gefÃ¼hrter Eingabe-Assistent mit manuellem Fallback.
+Die sinnvollste kurzfristige Strategie ist kein Vollkatalogprojekt, sondern ein geführter Eingabe-Assistent mit manuellem Fallback.
 
 Das liefert schnell Nutzen:
 - weniger Tipparbeit
@@ -75,19 +75,19 @@ Das liefert schnell Nutzen:
 - strukturiertere Daten
 - mehr technische Details im Fahrzeugprofil
 
-## Umgesetzte lÃ¶sung
+## Umgesetzte lösung
 
 Im Projekt wurde daher eine pragmatische V1 implementiert:
 
-### 1. GefÃ¼hrte Eingabe im Fahrzeugformular
-- VIN-basierte VorbefÃ¼llung
-- Marken-VorschlÃ¤ge
-- Modell-VorschlÃ¤ge abhÃ¤ngig von Marke und Baujahr
-- VorschlÃ¤ge fÃ¼r Fahrzeugtyp
-- manuelle Ãœberschreibung jederzeit mÃ¶glich
+### 1. Geführte Eingabe im Fahrzeugformular
+- VIN-basierte Vorbefüllung
+- Marken-Vorschläge
+- Modell-Vorschläge abhängig von Marke und Baujahr
+- Vorschläge für Fahrzeugtyp
+- manuelle Überschreibung jederzeit möglich
 
 ### 2. Erweiterter Fahrzeugdatensatz
-Es werden nun zusÃ¤tzlich gespeichert:
+Es werden nun zusätzlich gespeichert:
 - VIN
 - Fahrzeugtyp
 - Karosserieform
@@ -99,14 +99,14 @@ Es werden nun zusÃ¤tzlich gespeichert:
 - Leistung in kW
 - Hubraum in ccm
 - Sonderausstattung / Besonderheiten
-- Datenquelle der VorbefÃ¼llung
+- Datenquelle der Vorbefüllung
 
 ### 3. Architektur ohne komplexe Referenzdatenbank
-Es wurde bewusst keine groÃŸe lokale Fahrzeugkatalog-Datenbank aufgebaut.
+Es wurde bewusst keine große lokale Fahrzeugkatalog-Datenbank aufgebaut.
 
 Stattdessen wird eine einfache Integrationsarchitektur genutzt:
 - Route Handler in Next.js als Server-seitige BFF-Schicht
-- externe Datenquelle nur fÃ¼r VorschlÃ¤ge und VIN-Decode
+- externe Datenquelle nur für Vorschläge und VIN-Decode
 - Snapshot-Speicherung der relevanten Werte direkt am Fahrzeugdatensatz
 
 Vorteil:
@@ -116,12 +116,12 @@ Vorteil:
 
 ## Warum keine komplette lokale Katalog-DB in V1?
 
-Eine lokale Voll-DB fÃ¼r alle Marken, Modelle, Varianten, Motorisierungen und Sonderausstattungen wÃ¤re nur dann sinnvoll, wenn mindestens einer dieser Punkte zutrifft:
+Eine lokale Voll-DB für alle Marken, Modelle, Varianten, Motorisierungen und Sonderausstattungen wäre nur dann sinnvoll, wenn mindestens einer dieser Punkte zutrifft:
 - lizenzierte Datenquelle liegt bereits vor
-- es gibt klare Produktanforderungen fÃ¼r Vollabdeckung
+- es gibt klare Produktanforderungen für Vollabdeckung
 - ein Import-, Normalisierungs- und Updateprozess ist eingeplant
 
-Ohne diese Voraussetzungen wÃ¤re eine solche DB eher Ballast:
+Ohne diese Voraussetzungen wäre eine solche DB eher Ballast:
 - hoher Importaufwand
 - unklare Datenqualitaet
 - hoher Pflegebedarf
@@ -129,33 +129,33 @@ Ohne diese Voraussetzungen wÃ¤re eine solche DB eher Ballast:
 
 ## Produktfazit
 
-Es gibt eine einfache lÃ¶sung fÃ¼r einen relevanten Teil des Problems:
+Es gibt eine einfache lösung für einen relevanten Teil des Problems:
 - Marken-, Modell- und Typvorschlaege
-- VIN-gestuetzte VorbefÃ¼llung
-- strukturierte Speicherung zusÃ¤tzlicher Details
+- VIN-gestuetzte Vorbefüllung
+- strukturierte Speicherung zusätzlicher Details
 
-Es gibt keine einfache, seriÃ¶se und VollstÃ¤ndige Gratis-lÃ¶sung fÃ¼r alle Modellvarianten, Motorisierungen und Sonderausstattungen auf mobile.de-/AutoScout24-Niveau.
+Es gibt keine einfache, seriöse und Vollständige Gratis-lösung für alle Modellvarianten, Motorisierungen und Sonderausstattungen auf mobile.de-/AutoScout24-Niveau.
 
-## Empfohlene nÃ¤chste Schritte
+## Empfohlene nächste Schritte
 
 1. DACH-Fokus pruefen
-- Wenn der Schwerpunkt Deutschland, Ã–sterreich, Schweiz ist, sollte ein spÃ¤terer Anbieter fÃ¼r HSN/TSN, VIN und Variantenabdeckung evaluiert werden.
+- Wenn der Schwerpunkt Deutschland, Österreich, Schweiz ist, sollte ein späterer Anbieter für HSN/TSN, VIN und Variantenabdeckung evaluiert werden.
 
 2. Matching verbessern
-- spÃ¤ter: gespeicherte Referenz-IDs fÃ¼r Marken/Modelle/Varianten einfÃ¼hren
-- spÃ¤ter: historisierte Snapshot-Felder beibehalten
+- später: gespeicherte Referenz-IDs für Marken/Modelle/Varianten einführen
+- später: historisierte Snapshot-Felder beibehalten
 
 3. Optionaler zweiter Einstieg
-- HSN/TSN-Assistent fÃ¼r deutsche Fahrzeuge
-- wÃ¤re fÃ¼r DACH oft hilfreicher als VIN allein
+- HSN/TSN-Assistent für deutsche Fahrzeuge
+- wäre für DACH oft hilfreicher als VIN allein
 
 4. Sonderausstattung ausbauen
 - V1: Freitext-Snapshot
-- spÃ¤ter: strukturierte Optionsbibliothek oder Anbieterintegration
+- später: strukturierte Optionsbibliothek oder Anbieterintegration
 
 5. Editierfluss nachziehen
 - aktuell ist vor allem das Anlegen verbessert
-- ein spÃ¤terer Bearbeitungsdialog fÃ¼r bestehende Fahrzeuge ist sinnvoll
+- ein späterer Bearbeitungsdialog für bestehende Fahrzeuge ist sinnvoll
 
 
 

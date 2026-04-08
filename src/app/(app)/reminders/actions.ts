@@ -25,7 +25,9 @@ export async function toggleReminder(reminderId: string, isCompleted: boolean) {
     .eq("user_id", user.id);
 
   revalidatePath("/reminders");
+  revalidatePath("/servicetermine");
   revalidatePath(`/reminders/${reminderId}`);
+  revalidatePath(`/servicetermine/${reminderId}`);
 }
 
 export async function updateReminder(
@@ -75,14 +77,16 @@ export async function updateReminder(
     .eq("user_id", user.id);
 
   if (error) {
-    return { error: "Erinnerung konnte nicht aktualisiert werden.", success: null };
+    return { error: "Servicetermin konnte nicht aktualisiert werden.", success: null };
   }
 
   revalidatePath("/reminders");
+  revalidatePath("/servicetermine");
   revalidatePath(`/reminders/${reminderId}`);
+  revalidatePath(`/servicetermine/${reminderId}`);
   revalidatePath(`/vehicles/${vehicleId}`);
 
-  return { error: null, success: "Erinnerung aktualisiert." };
+  return { error: null, success: "Servicetermin aktualisiert." };
 }
 
 export async function linkReminderToCost(
@@ -113,7 +117,7 @@ export async function linkReminderToCost(
     .single();
 
   if (reminderError || !reminder) {
-    return { error: "Erinnerung nicht gefunden.", success: null };
+    return { error: "Servicetermin nicht gefunden.", success: null };
   }
 
   const { data: costEntry, error: costError } = await supabase
@@ -144,7 +148,9 @@ export async function linkReminderToCost(
     .eq("user_id", user.id);
 
   revalidatePath("/reminders");
+  revalidatePath("/servicetermine");
   revalidatePath(`/reminders/${reminderId}`);
+  revalidatePath(`/servicetermine/${reminderId}`);
   revalidatePath(`/vehicles/${reminder.vehicle_id}`);
   revalidatePath(`/costs/${costEntryId}`);
 

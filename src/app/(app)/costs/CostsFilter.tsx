@@ -19,14 +19,22 @@ export function CostsFilter({
   vehicles,
   selectedVehicle,
   selectedCategory,
+  selectedStartDate,
+  selectedEndDate,
 }: {
   vehicles: Pick<Vehicle, "id" | "make" | "model">[];
   selectedVehicle?: string;
   selectedCategory?: string;
+  selectedStartDate?: string;
+  selectedEndDate?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const hasActiveFilters = Boolean(selectedVehicle) || Boolean(selectedCategory);
+  const hasActiveFilters =
+    Boolean(selectedVehicle) ||
+    Boolean(selectedCategory) ||
+    Boolean(selectedStartDate) ||
+    Boolean(selectedEndDate);
 
   function updateFilter(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -70,6 +78,22 @@ export function CostsFilter({
           </option>
         ))}
       </select>
+
+      <input
+        type="date"
+        value={selectedStartDate ?? ""}
+        onChange={(e) => updateFilter("start_date", e.target.value)}
+        className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+        aria-label="Startdatum"
+      />
+
+      <input
+        type="date"
+        value={selectedEndDate ?? ""}
+        onChange={(e) => updateFilter("end_date", e.target.value)}
+        className="rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+        aria-label="Enddatum"
+      />
 
       {hasActiveFilters ? (
         <button

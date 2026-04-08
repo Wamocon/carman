@@ -16,7 +16,7 @@ const geistMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "CarMan",
   description:
-    "CarMan haelt Fahrzeugkosten, Wartungen und Erinnerungen an einem Ort klar und planbar.",
+    "CarMan haelt Fahrzeugkosten, Wartungen und Servicetermine an einem Ort klar und planbar.",
 };
 
 export default async function RootLayout({

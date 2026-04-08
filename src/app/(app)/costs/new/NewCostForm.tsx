@@ -22,6 +22,7 @@ export function NewCostForm({
   defaultReminderId,
   defaultTitle,
   defaultNotes,
+  lockedVehicleId,
 }: {
   vehicles: Vehicle[];
   defaultVehicleId?: string;
@@ -29,11 +30,15 @@ export function NewCostForm({
   defaultReminderId?: string;
   defaultTitle?: string;
   defaultNotes?: string;
+  lockedVehicleId?: string;
 }) {
   const [state, formAction, pending] = useActionState(createCostEntry, {
     error: null as string | null,
   });
   const [category, setCategory] = useState(defaultCategory ?? "fuel");
+  const lockedVehicle = lockedVehicleId
+    ? vehicles.find((vehicle) => vehicle.id === lockedVehicleId) ?? null
+    : null;
 
   const isFuel = category === "fuel";
 
@@ -70,7 +75,7 @@ export function NewCostForm({
 
       {defaultReminderId ? (
         <div className="rounded-xl border border-brand/20 bg-brand/10 p-3 text-sm text-foreground/85">
-          Dieser Eintrag wird mit einer Erinnerung verknüpft. Nach dem Speichern wird die Fälligkeit automatisch als erledigt markiert.
+          Dieser Eintrag wird mit einem Servicetermin verknüpft. Nach dem Speichern wird der Termin automatisch als erledigt markiert.
         </div>
       ) : null}
 
@@ -78,19 +83,31 @@ export function NewCostForm({
         <label htmlFor="vehicle_id" className="block text-sm font-medium text-foreground">
           Fahrzeug
         </label>
-        <select
-          id="vehicle_id"
-          name="vehicle_id"
-          required
-          defaultValue={defaultVehicleId ?? vehicles[0]?.id}
-          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
-        >
-          {vehicles.map((v) => (
-            <option key={v.id} value={v.id}>
-              {v.make} {v.model} ({v.license_plate})
-            </option>
-          ))}
-        </select>
+        {lockedVehicle ? (
+          <>
+            <input type="hidden" name="vehicle_id" value={lockedVehicle.id} />
+            <div className="mt-1 rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground">
+              {lockedVehicle.make} {lockedVehicle.model} ({lockedVehicle.license_plate})
+            </div>
+            <p className="mt-1 text-xs text-muted">
+              Das Fahrzeug ist für diesen Servicetermin fest vorgegeben und kann hier nicht geändert werden.
+            </p>
+          </>
+        ) : (
+          <select
+            id="vehicle_id"
+            name="vehicle_id"
+            required
+            defaultValue={defaultVehicleId ?? vehicles[0]?.id}
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+          >
+            {vehicles.map((v) => (
+              <option key={v.id} value={v.id}>
+                {v.make} {v.model} ({v.license_plate})
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div>

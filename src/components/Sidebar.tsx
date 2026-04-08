@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   CostIcon,
   DashboardIcon,
-  ExportIcon,
   ReminderIcon,
   SettingsIcon,
   VehicleIcon,
@@ -20,8 +19,7 @@ const NAV_ITEMS = [
   { href: "/dashboard", key: "dashboard", icon: DashboardIcon },
   { href: "/vehicles", key: "vehicles", icon: VehicleIcon },
   { href: "/costs", key: "costs", icon: CostIcon },
-  { href: "/reminders", key: "reminders", icon: ReminderIcon },
-  { href: "/export", key: "export", icon: ExportIcon },
+  { href: "/servicetermine", key: "reminders", icon: ReminderIcon },
   { href: "/settings", key: "settings", icon: SettingsIcon },
 ] as const;
 
@@ -83,7 +81,7 @@ export function Sidebar({
         <nav className="flex-1 space-y-1.5 px-3 py-4">
           {NAV_ITEMS.map((item) => {
             const active = pathname.startsWith(item.href);
-            const navHint = t.sidebar.nav[item.key].hint;
+            const navLabel = t.sidebar.nav[item.key].label;
             const Icon = item.icon;
             return (
               <Link
@@ -98,11 +96,11 @@ export function Sidebar({
               >
                 <span className="text-base"><Icon className="h-5 w-5" /></span>
                 <span
-                  className={`text-[11px] ${
+                  className={`text-sm ${
                     active ? "text-white/85" : "text-muted group-hover:text-foreground/70"
                   }`}
                 >
-                  {navHint}
+                  {navLabel}
                 </span>
               </Link>
             );

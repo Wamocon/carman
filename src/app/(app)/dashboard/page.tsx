@@ -127,28 +127,6 @@ export default async function DashboardPage() {
     ? primaryImageMap[focusVehicle.vehicle.id] ?? undefined
     : undefined;
 
-  const connectionScore = (() => {
-    if (!focusVehicle) return 0;
-
-    let score = 15;
-    const vehicle = focusVehicle.vehicle;
-
-    if ((vehicle.purchase_price ?? 0) > 0) score += 25;
-    if (focusVehicle.openReminderCount > 0) score += 20;
-    if (vehicle.current_mileage > 0) score += 10;
-
-    if (focusVehicle.latestCost?.date) {
-      const msSinceActivity =
-        new Date(today).getTime() - new Date(focusVehicle.latestCost.date).getTime();
-      const daysSinceActivity = msSinceActivity / (1000 * 60 * 60 * 24);
-      if (daysSinceActivity <= 90) {
-        score += 30;
-      }
-    }
-
-    return Math.min(score, 100);
-  })();
-
   function getVehicleStats(vehicleId: string) {
     const vCosts = allCosts.filter((c) => c.vehicle_id === vehicleId);
     const totalCosts = vCosts.reduce((sum, c) => sum + c.amount, 0);
@@ -199,7 +177,7 @@ export default async function DashboardPage() {
             <Link href="/costs/new" className="rounded-xl bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-strong">
               {t.dashboard.addCost}
             </Link>
-            <Link href="/reminders/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium hover:bg-foreground/5">
+            <Link href="/servicetermine/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium hover:bg-foreground/5">
               {t.dashboard.addReminder}
             </Link>
             <Link href="/vehicles/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium hover:bg-foreground/5">
@@ -210,31 +188,35 @@ export default async function DashboardPage() {
       </section>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="surface rounded-2xl p-4">
+        <Link href="/costs" className="surface rounded-2xl p-4 transition-colors hover:bg-foreground/5">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.month}</p>
           <p className="mt-2 text-sm text-muted">{t.dashboard.currentCosts}</p>
           <p className="mt-1 text-2xl font-semibold">{formatCurrency(costsThisMonth, locale)}</p>
-        </div>
-        <div className="surface rounded-2xl p-4">
+          <p className="mt-2 text-xs text-muted">Zur Kostenübersicht</p>
+        </Link>
+        <Link href="/costs" className="surface rounded-2xl p-4 transition-colors hover:bg-foreground/5">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.compare}</p>
           <p className="mt-2 text-sm text-muted">{t.dashboard.previousCosts}</p>
           <p className="mt-1 text-2xl font-semibold">{formatCurrency(costsLastMonth, locale)}</p>
-        </div>
-        <div className="surface rounded-2xl p-4">
+          <p className="mt-2 text-xs text-muted">Monatsvergleich öffnen</p>
+        </Link>
+        <Link href="/vehicles" className="surface rounded-2xl p-4 transition-colors hover:bg-foreground/5">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.inventory}</p>
           <p className="mt-2 text-sm text-muted">{t.dashboard.vehicleCount}</p>
           <p className="mt-1 text-2xl font-semibold">{allVehicles.length}</p>
-        </div>
-        <div className="surface rounded-2xl p-4">
+          <p className="mt-2 text-xs text-muted">Zum Fahrzeugbestand</p>
+        </Link>
+        <Link href="/servicetermine" className="surface rounded-2xl p-4 transition-colors hover:bg-foreground/5">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.todos}</p>
           <p className="mt-2 text-sm text-muted">{t.dashboard.openReminders}</p>
           <p className="mt-1 text-2xl font-semibold">{upcomingReminders.length}</p>
-        </div>
+          <p className="mt-2 text-xs text-muted">Zu den Serviceterminen</p>
+        </Link>
       </div>
 
       {focusVehicle ? (
         <section className="section-shell p-5 sm:p-6">
-          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr_0.65fr] lg:items-start">
+          <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr] lg:items-start">
             <div className="overflow-hidden rounded-2xl border border-border/70 bg-card/60">
               {focusVehicleImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -280,11 +262,6 @@ export default async function DashboardPage() {
               </Link>
             </div>
 
-            <div className="surface rounded-2xl p-4">
-              <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.dashboard.connectionScoreLabel}</p>
-              <p className="mt-1 text-3xl font-semibold text-foreground">{connectionScore}/100</p>
-              <p className="mt-2 text-xs text-muted">{t.dashboard.connectionScoreHint}</p>
-            </div>
           </div>
         </section>
       ) : null}

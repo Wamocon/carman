@@ -1,44 +1,44 @@
-ï»¿# CarMan Benutzerhandbuch
+# CarMan Benutzerhandbuch
 
-Dieses Handbuch richtet sich an neue Benutzer und erklÃ¤rt die wichtigsten Funktionen von CarMan Schritt fÃ¼r Schritt.
+Dieses Handbuch richtet sich an neue Benutzer und erklärt die wichtigsten Funktionen von CarMan Schritt für Schritt.
 
 ## 1. Ziel und Aufbau
 
-Mit CarMan verwaltest du Fahrzeuge, laufende Kosten, Erinnerungen und (im Pro-Tarif) Exporte in einer zentralen Webanwendung.
+Mit CarMan verwaltest du Fahrzeuge, laufende Kosten, Servicetermine und (im Pro-Tarif) Exporte in einer zentralen Webanwendung.
 
-Dieses Handbuch fÃ¼hrt dich in dieser Reihenfolge durch das System:
+Dieses Handbuch führt dich in dieser Reihenfolge durch das System:
 1. Anmeldung und Einstieg
-2. Ã¼bersicht und Navigation
+2. übersicht und Navigation
 3. Fahrzeuge
 4. Kosten
-5. Erinnerungen
+5. Servicetermine
 6. Export
 7. Einstellungen und Abo
-8. Fehlerbehebung und hÃ¤ufige Fragen
+8. Fehlerbehebung und häufige Fragen
 
 ## 2. Schnellstart in 5 Minuten
 
-1. Ã¶ffne die Anwendung im Browser.
+1. öffne die Anwendung im Browser.
 2. Melde dich mit einem Konto an.
-3. Wechsle zur Ã¼bersicht und prÃ¼fe die wichtigsten Kennzahlen.
+3. Wechsle zur übersicht und prüfe die wichtigsten Kennzahlen.
 4. Lege ein Fahrzeug an (falls noch keines vorhanden ist).
 5. Erfasse den ersten Kosteneintrag.
-6. Erstelle mindestens eine Erinnerung.
+6. Erstelle mindestens eine Servicetermin.
 
 ### Testbenutzer (lokale Umgebung)
 
-FÃ¼r lokale Tests stehen zwei Benutzer aus `docs/testbenutzer.md` bereit:
+Für lokale Tests stehen zwei Benutzer aus `docs/testbenutzer.md` bereit:
 
 | Konto | E-Mail | Passwort | Zweck |
 |---|---|---|---|
 | Free | `free@testBenutzer.local` | `Test1234!` | Test des Free-Limits (1 Fahrzeug, kein Export) |
 | Pro | `pro@testBenutzer.local` | `Test1234!` | Test von mehreren Fahrzeugen und CSV-Export |
 
-Hinweis: Diese Zugangsdaten sind nur fÃ¼r lokale Testumgebungen gedacht.
+Hinweis: Diese Zugangsdaten sind nur für lokale Testumgebungen gedacht.
 
 ## 3. Hauptprozesse auf einen Blick
 
-### 3.1 DurchgÃ¤ngiger Prozessfluss
+### 3.1 Durchgängiger Prozessfluss
 
 ```mermaid
 flowchart TD
@@ -46,19 +46,19 @@ flowchart TD
     B -- Nein --> C[Registrieren]
     B -- Ja --> D[Anmelden]
     C --> D
-    D --> E[Ã¼bersicht]
+    D --> E[übersicht]
 
     E --> F{Mindestens 1 Fahrzeug vorhanden?}
     F -- Nein --> G[Fahrzeug anlegen]
     G --> E
     F -- Ja --> H[Kosten erfassen]
 
-    H --> I[Kosten prÃ¼fen und filtern]
-    I --> J[Kostenposition Ã¶ffnen]
+    H --> I[Kosten prüfen und filtern]
+    I --> J[Kostenposition öffnen]
     J --> K[Kommentar und Rechnung hinterlegen]
 
-    E --> L[Erinnerung erstellen]
-    L --> M[Offene Erinnerungen verwalten]
+    E --> L[Servicetermin erstellen]
+    L --> M[Offene Servicetermine verwalten]
 
     E --> N{Abo = Pro?}
     N -- Ja --> O[CSV-Export]
@@ -74,10 +74,10 @@ flowchart TD
 graph LR
     U[Benutzer] --> NAV[Navigation]
 
-    NAV --> DASH[Ã¼bersicht]
+    NAV --> DASH[übersicht]
     NAV --> VEH[Fahrzeuge]
     NAV --> COST[Kosten]
-    NAV --> REM[Erinnerungen]
+    NAV --> REM[Servicetermine]
     NAV --> EXP[Export]
     NAV --> SET[Einstellungen]
 
@@ -121,10 +121,10 @@ Pfad: `/register`
 1. Gib Anzeigename, E-Mail und Passwort ein.
 2. Das Passwort muss mindestens 6 Zeichen haben.
 3. Sende das Formular ab.
-4. Bei Erfolg erscheint eine BestÃ¤tigung.
+4. Bei Erfolg erscheint eine Bestätigung.
 
 Typische Fehler:
-- Fehlende Felder: Bitte alle Felder ausfÃ¤llen.
+- Fehlende Felder: Bitte alle Felder ausfällen.
 - Passwort zu kurz: Mindestens 6 Zeichen.
 - Technischer Fehler: Registrierung erneut versuchen.
 
@@ -134,17 +134,17 @@ Pfad: `/login`
 
 1. E-Mail und Passwort eingeben.
 2. Formular absenden.
-3. Bei Erfolg erfolgt die Weiterleitung zur Ã¼bersicht.
+3. Bei Erfolg erfolgt die Weiterleitung zur übersicht.
 
 Typische Fehler:
 - Falsche Zugangsdaten: Der Anmeldeversuch wird mit Fehlermeldung abgelehnt.
 
 ### 4.3 Automatische Weiterleitung
 
-- Wenn du eingeloggt bist und die Startseite Ã¶ffnest, wirst du direkt auf `/dashboard` geleitet.
-- Wenn du nicht eingeloggt bist und geschÃ¼tzte Bereiche aufrufst, gelangst du zur Anmeldung.
+- Wenn du eingeloggt bist und die Startseite öffnest, wirst du direkt auf `/dashboard` geleitet.
+- Wenn du nicht eingeloggt bist und geschützte Bereiche aufrufst, gelangst du zur Anmeldung.
 
-## 5. Navigation und Ã¼bersicht
+## 5. Navigation und übersicht
 
 ### 5.1 Hauptnavigation
 
@@ -152,44 +152,44 @@ In der Seitenleiste findest du diese Bereiche:
 - Dashboard
 - Fahrzeuge
 - Kosten
-- Erinnerungen
+- Servicetermine
 - Export
 - Einstellungen
 
-ZusÃ¤tzliche Funktionen:
+Zusätzliche Funktionen:
 - Kontoanzeige mit Free/Pro-Kennzeichnung
 - Abmelden
 - Sprache und Darstellung
 
-### 5.2 Ã¼bersicht verstehen
+### 5.2 übersicht verstehen
 
 Pfad: `/dashboard`
 
-Die Ã¼bersicht zeigt dir unter anderem:
+Die übersicht zeigt dir unter anderem:
 - Aktuelle Monatskosten
 - Kosten des Vormonats
 - Anzahl der Fahrzeuge
-- Offene Erinnerungen
+- Offene Servicetermine
 
-Direktaktionen auf der Ã¼bersichtsseite:
+Direktaktionen auf der übersichtsseite:
 - Neuer Kosteneintrag
-- Neue Erinnerung
+- Neue Servicetermin
 - Neues Fahrzeug
 
 Weitere Inhalte:
-- Fokusfahrzeug mit letzter AktivitÃ¤t
+- Fokusfahrzeug mit letzter Aktivität
 - Verbindungswert
 - Fahrzeugkarten mit Kennzahlen
-- Einstieg in den groÃŸen Kostenverlauf
+- Einstieg in den großen Kostenverlauf
 
-### 5.3 GroÃŸer Kostenverlauf
+### 5.3 Großer Kostenverlauf
 
 Pfad: `/dashboard/cost-trend`
 
-1. Ã¶ffne den Bereich â€Kostenverlauf groÃŸâ€œ.
+1. öffne den Bereich „Kostenverlauf groß“.
 2. Stelle Kategorien, Fahrzeuge und Zeitraum ein.
 3. Werte bleiben auf Monatsbasis.
-4. Nutze die Ansicht fÃ¼r Trends und Vergleiche.
+4. Nutze die Ansicht für Trends und Vergleiche.
 
 ## 6. Fahrzeuge verwalten
 
@@ -208,9 +208,9 @@ Die Seite zeigt alle Fahrzeugkarten inklusive:
 
 Pfad: `/vehicles/new`
 
-1. Optional: VIN/Fahrgestellnummer eingeben und per VIN vorbefÃ¤llen.
-2. Pflichtfelder sauber ausfÃ¤llen (Marke, Modell, Jahr, Kennzeichen, Kilometerstand).
-3. Optionale Detailfelder ergÃ¤nzen (z. B. Variante, Motor, Getriebe, Kaufpreis, Kaufdatum).
+1. Optional: VIN/Fahrgestellnummer eingeben und per VIN vorbefällen.
+2. Pflichtfelder sauber ausfällen (Marke, Modell, Jahr, Kennzeichen, Kilometerstand).
+3. Optionale Detailfelder ergänzen (z. B. Variante, Motor, Getriebe, Kaufpreis, Kaufdatum).
 4. Speichern.
 
 Wichtige Hinweise:
@@ -223,9 +223,9 @@ Wichtige Hinweise:
 Pfad: `/vehicles/[id]`
 
 Hier findest du:
-- Schnellaktionen (Tanken, Wartung, Kosten, Erinnerung)
+- Schnellaktionen (Tanken, Wartung, Kosten, Servicetermin)
 - Kennzahlen (Betriebskosten, Kaufpreis, Gesamtaufwand)
-- Fahrzeug-Ã¼bersicht (24 Monate, Verteilungen, Durchschnittswerte)
+- Fahrzeug-übersicht (24 Monate, Verteilungen, Durchschnittswerte)
 - Kostenverlauf je Kategorie
 - Standardkostenplaner
 - Fahrzeugdaten bearbeiten
@@ -234,16 +234,16 @@ Hier findest du:
 
 ## 7. Kosten erfassen und analysieren
 
-### 7.1 KostenÃ¼bersicht
+### 7.1 Kostenübersicht
 
 Pfad: `/costs`
 
 1. Optional nach Fahrzeug und/oder Kategorie filtern.
 2. Tabelle mit Datum, Kategorie, Titel, Fahrzeug und Betrag lesen.
 3. Titel anklicken, um zur Detailseite zu wechseln.
-4. Bei Bedarf durch Seiten blÃ¤ttern.
+4. Bei Bedarf durch Seiten blättern.
 
-UnterstÃ¼tzte Kategorien:
+Unterstützte Kategorien:
 - Tanken
 - Wartung
 - Reparatur
@@ -257,12 +257,12 @@ UnterstÃ¼tzte Kategorien:
 
 Pfad: `/costs/new`
 
-1. Fahrzeug auswÃ¤hlen.
+1. Fahrzeug auswählen.
 2. Kategorie festlegen.
-3. Titel, Betrag und Datum ausfÃ¤llen.
+3. Titel, Betrag und Datum ausfällen.
 4. Optional Kilometerstand eintragen.
-5. Bei Kategorie Tanken zusÃ¤tzlich Liter und Preis pro Liter erfassen.
-6. Optional Notizen ergÃ¤nzen.
+5. Bei Kategorie Tanken zusätzlich Liter und Preis pro Liter erfassen.
+6. Optional Notizen ergänzen.
 7. Speichern.
 
 Wichtige Eingabegrenzen:
@@ -282,48 +282,48 @@ Die Detailseite bietet:
 - Notizbereich
 - Kommentare je Kostenposition
 - Rechnungsupload und Dokumentliste
-- Direktlink fÃ¼r einen Ã¤hnlichen Eintrag
+- Direktlink für einen ähnlichen Eintrag
 
-## 8. Erinnerungen
+## 8. Servicetermine
 
-### 8.1 ErinnerungsÃ¼bersicht
+### 8.1 Serviceterminsübersicht
 
-Pfad: `/reminders`
+Pfad: `/Service appointments`
 
-- Erinnerungen werden nach Fahrzeug gruppiert.
-- Erledigte EintrÃ¤ge lassen sich ein- und ausblenden.
-- Jede Erinnerung kann als erledigt markiert oder wieder geÃ¶ffnet werden.
+- Servicetermine werden nach Fahrzeug gruppiert.
+- Erledigte Einträge lassen sich ein- und ausblenden.
+- Jede Servicetermin kann als erledigt markiert oder wieder geöffnet werden.
 
-### 8.2 Neue Erinnerung erstellen
+### 8.2 Neue Servicetermin erstellen
 
-Pfad: `/reminders/new`
+Pfad: `/Service appointments/new`
 
-1. Fahrzeug wÃ¤hlen.
+1. Fahrzeug wählen.
 2. Titel vergeben.
-3. Erinnerungsart auswÃ¤hlen:
+3. Serviceterminsart auswählen:
    - Datum
    - Kilometerstand
    - Beides
-4. Je nach Typ FÃ¤lligkeitsdatum und/oder Kilometerstand setzen.
+4. Je nach Typ Serviceterminsdatum und/oder Kilometerstand setzen.
 5. Optional Notiz hinterlegen.
 6. Speichern.
 
-Hinweis: Ohne Fahrzeug kann keine Erinnerung erstellt werden.
+Hinweis: Ohne Fahrzeug kann keine Servicetermin erstellt werden.
 
 ## 9. Export (Pro)
 
 Pfad: `/export`
 
-Nur Pro-Benutzer kÃ¶nnen exportieren.
+Nur Pro-Benutzer können exportieren.
 
 ### 9.1 CSV-Export erstellen
 
-1. Optional ein Fahrzeug auswÃ¤hlen, sonst alle Fahrzeuge.
+1. Optional ein Fahrzeug auswählen, sonst alle Fahrzeuge.
 2. Optional Von-/Bis-Datum setzen.
 3. Export starten.
 4. CSV-Datei wird im Browser heruntergeladen.
 
-CSV enthÃ¤lt unter anderem:
+CSV enthält unter anderem:
 - Datum
 - Fahrzeug
 - Kennzeichen
@@ -337,7 +337,7 @@ CSV enthÃ¤lt unter anderem:
 
 Typische Meldungen:
 - Free-Tarif: Pro-Funktion gesperrt.
-- Keine Daten im Zeitraum: Export nicht mÃ¶glich.
+- Keine Daten im Zeitraum: Export nicht möglich.
 
 ## 10. Einstellungen und Abo
 
@@ -346,68 +346,68 @@ Pfad: `/settings`
 Hier kannst du:
 - Profilinformationen einsehen (E-Mail, Mitglied seit)
 - Anzeigename aktualisieren
-- Sprache und Darstellung Ã¤ndern
+- Sprache und Darstellung ändern
 - Abo-Status (Free/Pro) sehen
 
 Bei Free wird ein Upgrade-Hinweis angezeigt.
 
-## 11. Empfohlene Vorgehensweisen fÃ¼r neue Benutzer
+## 11. Empfohlene Vorgehensweisen für neue Benutzer
 
-1. Lege zuerst dein Fahrzeugprofil vollstÃ¤ndig an.
-2. Erfasse Kosten mÃ¶glichst zeitnah nach dem jeweiligen Ereignis.
+1. Lege zuerst dein Fahrzeugprofil vollständig an.
+2. Erfasse Kosten möglichst zeitnah nach dem jeweiligen Ereignis.
 3. Trage beim Tanken immer Kilometerstand, Liter und Preis pro Liter ein.
-4. Nutze Kommentare fÃ¼r Kontext (Werkstatt, Besonderheiten, Entscheidungen).
+4. Nutze Kommentare für Kontext (Werkstatt, Besonderheiten, Entscheidungen).
 5. Hinterlege Rechnungen direkt an der Kostenposition.
-6. Setze Erinnerungen bei wichtigen Terminen mÃ¶glichst als Typ â€Beidesâ€œ.
-7. Nutze die Trendansichten monatlich fÃ¼r deine Kostenkontrolle.
+6. Setze Servicetermine bei wichtigen Terminen möglichst als Typ „Beides“.
+7. Nutze die Trendansichten monatlich für deine Kostenkontrolle.
 
-## 12. Fehlerbehebung und hÃ¤ufige Fragen
+## 12. Fehlerbehebung und häufige Fragen
 
-| Problem | MÃ¶gliche Ursache | LÃ¶sung |
+| Problem | Mögliche Ursache | Lösung |
 |---|---|---|
-| Anmeldung funktioniert nicht | E-Mail/Passwort falsch | Zugangsdaten prÃ¼fen und erneut anmelden |
-| Registrierung klappt nicht | Passwort zu kurz oder Felder unvollstÃ¤ndig | Mindestens 6 Zeichen nutzen, alle Felder ausfÃ¤llen |
-| Kein Kosteneintrag mÃ¶glich | Es existiert noch kein Fahrzeug | Zuerst Fahrzeug unter `/vehicles/new` anlegen |
-| Keine Erinnerung mÃ¶glich | Es existiert noch kein Fahrzeug | Zuerst Fahrzeug anlegen |
+| Anmeldung funktioniert nicht | E-Mail/Passwort falsch | Zugangsdaten prüfen und erneut anmelden |
+| Registrierung klappt nicht | Passwort zu kurz oder Felder unvollständig | Mindestens 6 Zeichen nutzen, alle Felder ausfällen |
+| Kein Kosteneintrag möglich | Es existiert noch kein Fahrzeug | Zuerst Fahrzeug unter `/vehicles/new` anlegen |
+| Keine Servicetermin möglich | Es existiert noch kein Fahrzeug | Zuerst Fahrzeug anlegen |
 | Zweites Fahrzeug im Free-Tarif blockiert | Fahrzeuglimit erreicht | Upgrade auf Pro oder bestehendes Fahrzeug weiterverwenden |
-| Export nicht verfÃ¼gbar | Konto ist Free | Pro-Tarif nutzen |
-| Export liefert keine Datei | Keine Daten fÃ¼r den gewÃ¤hlten Zeitraum | Zeitraum erweitern oder Fahrzeugfilter entfernen |
-| Rechnungslink nicht verfÃ¼gbar | Signierter Link nicht erzeugt | Seite neu laden und erneut prÃ¼fen |
+| Export nicht verfügbar | Konto ist Free | Pro-Tarif nutzen |
+| Export liefert keine Datei | Keine Daten für den gewählten Zeitraum | Zeitraum erweitern oder Fahrzeugfilter entfernen |
+| Rechnungslink nicht verfügbar | Signierter Link nicht erzeugt | Seite neu laden und erneut prüfen |
 
-## 13. TestablÃ¤ufe fÃ¼r den Einstieg
+## 13. Testabläufe für den Einstieg
 
 ### 13.1 Free-Szenario
 
 1. Anmeldung mit `free@testBenutzer.local`.
-2. Fahrzeugbestand prÃ¼fen (1 Fahrzeug).
+2. Fahrzeugbestand prüfen (1 Fahrzeug).
 3. Zweites Fahrzeug anlegen versuchen (Upgrade-Hinweis erwarten).
-4. Kosten erfassen und Kosten-Detailseite prÃ¼fen.
+4. Kosten erfassen und Kosten-Detailseite prüfen.
 5. Kommentar und Rechnung an einer Kostenposition testen.
-6. Erinnerung erstellen und als erledigt markieren.
-7. Exportseite Ã¶ffnen (gesperrt erwarten).
+6. Servicetermin erstellen und als erledigt markieren.
+7. Exportseite öffnen (gesperrt erwarten).
 
 ### 13.2 Pro-Szenario
 
 1. Anmeldung mit `pro@testBenutzer.local`.
-2. Mehrere Fahrzeuge prÃ¼fen.
+2. Mehrere Fahrzeuge prüfen.
 3. Kosten je Fahrzeug erfassen.
-4. Dashboard und groÃŸen Kostenverlauf mit Filtern testen.
-5. Export mit Datumsbereich ausfÃ¼hren und CSV Ã¶ffnen.
+4. Dashboard und großen Kostenverlauf mit Filtern testen.
+5. Export mit Datumsbereich ausführen und CSV öffnen.
 
 ## 14. Kurzreferenz
 
-- Dashboard: GesamtÃ¼berblick und schnelle Aktionen
+- Dashboard: Gesamtüberblick und schnelle Aktionen
 - Fahrzeuge: Stammdaten, Kostenkontext, Bilder, Kommentare
 - Kosten: Erfassung, Filterung, Detaildokumentation
-- Erinnerungen: FÃ¤lligkeiten nach Zeit und Laufleistung
+- Servicetermine: Servicetermine nach Zeit und Laufleistung
 - Export: CSV-Berichte (Pro)
 - Einstellungen: Profil, Sprache, Darstellung, Abo
 
-Wenn du als neuer Benutzer nur eine Reihenfolge befolgen mÃ¶chtest, dann diese:
+Wenn du als neuer Benutzer nur eine Reihenfolge befolgen möchtest, dann diese:
 1. Anmelden
-2. Fahrzeug prÃ¼fen/anlegen
+2. Fahrzeug prüfen/anlegen
 3. Kosten erfassen
-4. Erinnerung setzen
+4. Servicetermin setzen
 5. Monatsverlauf ansehen
 
 

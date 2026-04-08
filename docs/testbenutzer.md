@@ -1,7 +1,7 @@
-ï»¿# CarMan â€” Testbenutzer
+# CarMan — Testbenutzer
 
 > Diese Benutzer werden automatisch per Seed-Skript in der lokalen Supabase-Instanz angelegt.
-> PasswÃ¶rter sind nur fÃ¼r die Testumgebung vorgesehen.
+> Passwörter sind nur für die Testumgebung vorgesehen.
 
 ---
 
@@ -18,7 +18,7 @@ Der Befehl setzt die lokale Datenbank aus Migrationen neu auf und spielt danach 
 - Profile inkl. Abo-Stufe
 - Beispiel-Fahrzeuge
 - Beispiel-Kosten
-- Beispiel-Erinnerungen
+- Beispiel-Servicetermine
 
 ### Nur Testdaten neu einspielen (ohne Reset)
 
@@ -45,15 +45,15 @@ npm run db:reset:no-seed
 
 Der Pro-Benutzer wird beim Seeding automatisch auf `pro` gesetzt, der Free-Benutzer bleibt `free`.
 
-Zusatz fÃ¼r Auswertungen: Das Seed-Skript erzeugt fÃ¼r alle Fahrzeuge eine realistische Kostenhistorie Ã¼ber die letzten 24 Monate, damit Verlaufsgrafiken und Durchschnittsberechnungen direkt testbar sind.
+Zusatz für Auswertungen: Das Seed-Skript erzeugt für alle Fahrzeuge eine realistische Kostenhistorie über die letzten 24 Monate, damit Verlaufsgrafiken und Durchschnittsberechnungen direkt testbar sind.
 
 ---
 
 ## Persistenz bei Docker Stop/Start
 
-- Normales Docker/Supabase-Stoppen und -Starten behÃ¤lt die Daten (lokale Volumes).
+- Normales Docker/Supabase-Stoppen und -Starten behält die Daten (lokale Volumes).
 - Testdaten gehen nur bei explizitem Reset/Neuaufbau verloren.
-- Falls nÃ¶tig, jederzeit wiederherstellen mit `npm run db:seed:testdata`.
+- Falls nötig, jederzeit wiederherstellen mit `npm run db:seed:testdata`.
 
 ---
 
@@ -67,17 +67,17 @@ Zusatz fÃ¼r Auswertungen: Das Seed-Skript erzeugt fÃ¼r alle Fahrzeuge eine reali
 | Fahrzeug anlegen | Erstes Fahrzeug kann angelegt werden |
 | Zweites Fahrzeug anlegen | Wird blockiert mit Upgrade-Hinweis |
 | Kosten erfassen (Tanken, Wartung, Fixkosten) | Funktioniert ohne Limit |
-| Kostenposition Ã¶ffnen (/costs/[id]) | Detailseite zeigt Betrag, Fahrzeug, Kommentare und Rechnungsbereich |
+| Kostenposition öffnen (/costs/[id]) | Detailseite zeigt Betrag, Fahrzeug, Kommentare und Rechnungsbereich |
 | Kommentar zu Kostenposition speichern | Kommentar erscheint direkt in der Detailseite |
-| Rechnung hochladen (PDF/Bild) | Dokument wird am Kosteneintrag hinterlegt und kann geÃ¶ffnet werden |
-| Erinnerung erstellen | Funktioniert |
+| Rechnung hochladen (PDF/Bild) | Dokument wird am Kosteneintrag hinterlegt und kann geöffnet werden |
+| Servicetermin erstellen | Funktioniert |
 | Dashboard anzeigen | Zeigt Zusammenfassung des einen Fahrzeugs |
-| Dashboard Kostenverlauf groÃŸ | Kategorien/Fahrzeuge/Zeitraum lassen sich filtern, Summen reagieren dynamisch |
-| Fahrzeugdetails bearbeiten | Kopfdaten und Detailfelder kÃ¶nnen gespeichert werden |
+| Dashboard Kostenverlauf groß | Kategorien/Fahrzeuge/Zeitraum lassen sich filtern, Summen reagieren dynamisch |
+| Fahrzeugdetails bearbeiten | Kopfdaten und Detailfelder können gespeichert werden |
 | Fahrzeugkommentar speichern | Kommentar erscheint im Fahrzeugprofil |
 | Fahrzeugbild hochladen | Bild erscheint in der Fahrzeuggalerie |
-| Export aufrufen (/export) | Zeigt Upgrade-Hinweis, kein Download mÃ¶glich |
-| Einstellungen â†’ Abo | Zeigt "Free" mit Upgrade-Hinweis |
+| Export aufrufen (/export) | Zeigt Upgrade-Hinweis, kein Download möglich |
+| Einstellungen ? Abo | Zeigt "Free" mit Upgrade-Hinweis |
 
 ### Pro-Benutzer: `pro@testBenutzer.local`
 
@@ -85,34 +85,34 @@ Zusatz fÃ¼r Auswertungen: Das Seed-Skript erzeugt fÃ¼r alle Fahrzeuge eine reali
 |---|---|
 | Anmeldung mit `pro@testBenutzer.local` / `Test1234!` | Erfolgreiche Anmeldung, Weiterleitung zu /dashboard |
 | Mehrere Fahrzeuge anlegen | Kein Limit |
-| Kosten fÃ¼r verschiedene Fahrzeuge erfassen | Funktioniert, Zuordnung korrekt |
-| Kosten-Detailseiten inkl. Dokumentation | Kommentare und Rechnungen pro Eintrag verfÃ¼gbar |
-| Erinnerungen fÃ¼r alle Fahrzeuge | Funktioniert |
-| Dashboard | Zeigt Ã¼bersicht Ã¼ber alle Fahrzeuge |
-| Dashboard Kostenverlauf groÃŸ | Kategorien/Fahrzeuge/Zeitraum steuerbar mit MonatsauflÃ¶sung |
-| Fahrzeugprofil bearbeiten | Ã„nderungen an Stammdaten und Details bleiben erhalten |
+| Kosten für verschiedene Fahrzeuge erfassen | Funktioniert, Zuordnung korrekt |
+| Kosten-Detailseiten inkl. Dokumentation | Kommentare und Rechnungen pro Eintrag verfügbar |
+| Servicetermine für alle Fahrzeuge | Funktioniert |
+| Dashboard | Zeigt übersicht über alle Fahrzeuge |
+| Dashboard Kostenverlauf groß | Kategorien/Fahrzeuge/Zeitraum steuerbar mit Monatsauflösung |
+| Fahrzeugprofil bearbeiten | Änderungen an Stammdaten und Details bleiben erhalten |
 | Fahrzeugbilder/Galerie | Mehrere Bilder pro Fahrzeug dokumentierbar |
 | Export (/export) | CSV-Download funktioniert |
 | Filter auf Kosten-Seite | Fahrzeug- und Kategoriefilter korrekt |
-| Einstellungen â†’ Abo | Zeigt "Pro"-Kennzeichnung |
+| Einstellungen ? Abo | Zeigt "Pro"-Kennzeichnung |
 
 ---
 
-## Enthaltene Seed-Daten (KurzÃ¼bersicht)
+## Enthaltene Seed-Daten (Kurzübersicht)
 
 **Free-Benutzerin (Anna):**
 - 1 Fahrzeug: VW Golf, 2019, Benzin, B-AB 1234, 45.000 km
 - Kaufpreis hinterlegt: 17.200 EUR (Kaufdatum 16.05.2023)
 - 24 Monate Kostenhistorie mit wiederkehrenden und variablen Kosten (u. a. Tanken, Versicherung, Wartung, Parken)
-- Kommentare und Rechnungsdokumente fÃ¼r ausgewÃ¤hlte Kostenpositionen
-- 2 Erinnerungen (TÃœV, Reifenwechsel)
+- Kommentare und Rechnungsdokumente für ausgewählte Kostenpositionen
+- 2 Servicetermine (TÜV, Reifenwechsel)
 
 **Pro-Benutzer (Max):**
 - 2 Fahrzeuge: BMW 320d, 2020, Diesel + Tesla Model 3, 2022, Elektro
 - Kaufpreise hinterlegt: 28.900 EUR (BMW) und 39.990 EUR (Tesla)
 - 24 Monate Kostenhistorie pro Fahrzeug mit saisonalen Schwankungen und mehreren Kategorien (Tanken/Laden, Wartung, Steuer, Versicherung, Reparatur, Parken, Sonstiges)
-- Kommentare und Rechnungsdokumente fÃ¼r ausgewÃ¤hlte Kostenpositionen
-- 3+ Erinnerungen
-- ExportprÃ¼fung mit verschiedenen Datumsbereichen
+- Kommentare und Rechnungsdokumente für ausgewählte Kostenpositionen
+- 3+ Servicetermine
+- Exportprüfung mit verschiedenen Datumsbereichen
 
 

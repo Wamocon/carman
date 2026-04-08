@@ -342,6 +342,94 @@ test("local supabase can create and read app data", async (t) => {
     assert.equal(cleanupVehicleError, null);
   });
 
+  await t.test("enforce reminder and cost vehicle consistency", async () => {
+    assert.ok(userId);
+
+    const { data: vehicles, error: vehiclesError } = await supabase
+      .from("vehicles")
+      .insert([
+        {
+          user_id: userId,
+          make: "Reminder",
+          model: "Source",
+          year: 2024,
+          fuel_type: "petrol",
+          license_plate: "REM-100",
+          current_mileage: 15000,
+        },
+        {
+          user_id: userId,
+          make: "Reminder",
+          model: "Mismatch",
+          year: 2024,
+          fuel_type: "diesel",
+          license_plate: "REM-200",
+          current_mileage: 25000,
+        },
+      ])
+      .select("id, license_plate");
+
+    assert.equal(vehiclesError, null);
+    assert.equal(vehicles?.length, 2);
+
+    const sourceVehicle = vehicles?.find((vehicle) => vehicle.license_plate === "REM-100");
+    const mismatchVehicle = vehicles?.find((vehicle) => vehicle.license_plate === "REM-200");
+
+    assert.ok(sourceVehicle?.id);
+    assert.ok(mismatchVehicle?.id);
+
+    const { data: reminder, error: reminderError } = await supabase
+      .from("reminders")
+      .insert({
+        vehicle_id: sourceVehicle?.id,
+        user_id: userId,
+        title: "HU Termin",
+        reminder_type: "date",
+        due_date: "2026-06-01",
+      })
+      .select("id")
+      .single();
+
+    assert.equal(reminderError, null);
+    assert.ok(reminder?.id);
+
+    const { data: validCost, error: validCostError } = await supabase
+      .from("cost_entries")
+      .insert({
+        vehicle_id: sourceVehicle?.id,
+        user_id: userId,
+        reminder_id: reminder?.id,
+        category: "maintenance",
+        title: "HU Gebühr",
+        amount: 149.5,
+        date: "2026-05-20",
+      })
+      .select("id, reminder_id")
+      .single();
+
+    assert.equal(validCostError, null);
+    assert.equal(validCost?.reminder_id, reminder?.id);
+
+    const { error: invalidCostError } = await supabase.from("cost_entries").insert({
+      vehicle_id: mismatchVehicle?.id,
+      user_id: userId,
+      reminder_id: reminder?.id,
+      category: "maintenance",
+      title: "Falsche Verknüpfung",
+      amount: 50,
+      date: "2026-05-20",
+    });
+
+    assert.notEqual(invalidCostError, null);
+
+    const { error: cleanupVehiclesError } = await supabase
+      .from("vehicles")
+      .delete()
+      .in("id", [sourceVehicle?.id ?? "", mismatchVehicle?.id ?? ""]);
+
+    assert.equal(cleanupVehiclesError, null);
+  });
+
   await t.test("cleanup auth user", async () => {
     assert.ok(userId);
     const currentUserId = userId;
