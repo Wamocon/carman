@@ -20,8 +20,8 @@ Folge diesen Schritten in der angegebenen Reihenfolge, um vom Template zur Produ
 1. **GitHub Repo erstellen** — Nutze dieses Template, um ein neues Repository in der Wamocon GitHub Organisation zu erstellen.
 2. **Repo klonen** — Klone es auf deinen Rechner und führe `npm install` aus.
 3. **GitHub Workflow-Datei aktualisieren** — Öffne `.github/workflows/deploy.yml` und `.github/workflows/pr-pipeline.yml`, ersetze `Wamocon/github_workflow` durch deine Org/Repo-Referenz falls abweichend.
-4. **`.env.local` aktualisieren & Supabase verbinden** — Kopiere `.env.example` → `.env.local`, erstelle ein Remote-Supabase-Projekt und trage die Zugangsdaten ein.
-5. **Lokal starten & Entwicklung beginnen** — Führe `npm run dev` aus und beginne mit der Entwicklung.
+4. **Lokales Supabase starten & `.env.local` synchronisieren** — Führe `npm run supabase:start` aus. Docker und der lokale Supabase-Stack werden bei Bedarf automatisch gestartet und `.env.local` wird aktualisiert.
+5. **Migrationen lokal anwenden & Entwicklung beginnen** — Führe `npm run db:reset` aus, dann `npm run dev`.
 6. **Repo vorübergehend öffentlich machen & auf Vercel deployen** — Stelle das Repo temporär auf öffentlich, importiere es in Vercel und deploye.
 7. **Domain von Strato hinzufügen** — Konfiguriere die über Strato erworbene Domain in Vercel.
 8. **Vercel Project ID holen** — Kopiere die Vercel Project ID aus den Vercel-Projekteinstellungen.
@@ -42,8 +42,11 @@ cd <dein-repo-name>
 # Abhängigkeiten installieren
 npm install
 
-# Umgebungsvariablen kopieren
-cp .env.example .env.local
+# Lokalen Supabase-Stack starten und .env.local aktualisieren
+npm run supabase:start
+
+# Lokale Migrationen anwenden
+npm run db:reset
 
 # Entwicklungsserver starten (mit Turbopack für schnelles Hot-Reload)
 npm run dev
@@ -55,6 +58,12 @@ npm run dev
 
 | Befehl | Beschreibung |
 |---|---|
+| `npm run supabase:start` | Prüft Docker und den lokalen Supabase-Stack, startet beides bei Bedarf und synchronisiert `.env.local` |
+| `npm run db:reset` | Setzt die lokale Docker-Datenbank aus den timestamped Migrationen neu auf |
+| `npm run db:lint` | Prüft die lokalen Migrationen auf SQL-Probleme |
+| `npm run db:diff` | Zeigt lokales Schema-Drift gegenüber den Migrationen |
+| `npm run db:check` | Führt Reset, Lint und Integrationstest als Gesamtprüfung aus |
+| `npm run test:integration:local` | Verifiziert Read/Write gegen die lokale Docker-Supabase |
 | `npm run dev` | Startet den Dev-Server mit Turbopack (Hot Reload) |
 | `npm run build` | Erstellt den Produktions-Build |
 | `npm run start` | Startet den Produktionsserver |
@@ -98,7 +107,7 @@ git push origin feature/mein-feature
 
 ---
 
-### 2. Supabase Setup & Warnung
+### 2. Lokales Supabase-Setup & Warnung
 
 > ⚠️ **KRITISCH: Sobald du einen Supabase-Account hast, speichere alle Testdaten direkt dort.**
 >
@@ -106,15 +115,17 @@ git push origin feature/mein-feature
 
 **Schritte:**
 
-1. Gehe zu [supabase.com](https://supabase.com) und erstelle ein neues Projekt.
-2. Kopiere die **Project URL**, den **Anon Key** und den **Service Role Key** aus  
-   `Project Settings → API`.
-3. Trage sie in deine `.env.local` Datei ein:
+1. Stelle sicher, dass Docker Desktop läuft.
+2. Führe `npm run supabase:start` aus. Das Skript prüft Docker und den lokalen Supabase-Stack automatisch und startet beides bei Bedarf.
+3. Die lokalen Werte werden automatisch in `.env.local` geschrieben:
    ```
-   NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
-   NEXT_PUBLIC_SUPABASE_ANON_KEY=dein-anon-key
-   SUPABASE_SERVICE_ROLE_KEY=dein-service-role-key
+   NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=<lokaler anon key>
+   SUPABASE_SERVICE_ROLE_KEY=<lokaler service role key>
+   DATABASE_URL=postgresql://postgres:postgres@127.0.0.1:54322/postgres
+   SUPABASE_DB_SCHEMA=public
    ```
+4. Führe `npm run db:reset` aus, um die lokale Datenbank strikt aus den Migrationen aufzubauen.
 
 ---
 
@@ -124,8 +135,12 @@ git push origin feature/mein-feature
 
 Der Supabase MCP (Model Context Protocol) Server ermöglicht es deinem KI-Coding-Assistenten (z.B. GitHub Copilot, Cursor), Migrationen und Tabellen direkt zu erstellen und zu verwalten. So wird sichergestellt, dass alle Schema-Änderungen versioniert und reproduzierbar sind.
 
-- Migrationen werden in `supabase/migrations/` gespeichert.
-- Nutze die MCP-Tools, um Tabellen zu erstellen, Schemas zu ändern und Indizes zu verwalten.
+- Migrationen werden in `supabase/migrations/` gespeichert und immer timestamped angelegt.
+- Neuer Workflow für jede Schema-Änderung:
+   1. `npx supabase migration new <name>`
+   2. SQL-Datei in `supabase/migrations/` bearbeiten
+   3. `npm run db:check` ausführen
+- Für Produktion werden hier keine manuellen Push-Befehle dokumentiert; lokal wird nur sichergestellt, dass die Migrationen fehlerfrei und vollständig für Supabase MCP sind.
 
 #### Arbeiten mit mehreren Schemas
 

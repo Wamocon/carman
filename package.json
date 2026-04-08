@@ -1,15 +1,35 @@
 {
-  "name": "template_repo",
+  "name": "smart-car-manager",
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "supabase:ensure": "powershell -ExecutionPolicy Bypass -File ./scripts/ensure-local-supabase.ps1",
+    "supabase:start": "powershell -ExecutionPolicy Bypass -File ./scripts/ensure-local-supabase.ps1 -SyncEnv",
+    "supabase:env:sync": "powershell -ExecutionPolicy Bypass -File ./scripts/sync-local-supabase-env.ps1",
+    "predb:reset": "npm run supabase:start",
+    "db:reset": "powershell -ExecutionPolicy Bypass -File ./scripts/reset-local-supabase-db.ps1",
+    "predb:lint": "npm run supabase:start",
+    "db:lint": "npx supabase db lint",
+    "predb:diff": "npm run supabase:start",
+    "db:diff": "npx supabase db diff --local --schema public",
+    "predb:check": "npm run supabase:start",
+    "db:check": "powershell -ExecutionPolicy Bypass -Command \"npm run db:reset; npm run db:lint; npm run test:integration:local\"",
+    "pretest:integration:local": "npm run supabase:start",
+    "test:integration:local": "node --env-file=.env.local --import tsx --test tests/local-supabase.integration.test.ts",
+    "predev": "npm run supabase:start",
     "dev": "next dev --turbopack",
+    "prebuild": "npm run supabase:start",
     "build": "next build",
+    "prestart": "npm run supabase:start",
     "start": "next start",
+    "prelint": "npm run supabase:start",
     "lint": "eslint .",
+    "pretypecheck": "npm run supabase:start",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.0",
+    "@supabase/supabase-js": "^2.102.1",
     "next": "16.2.1",
     "react": "19.2.4",
     "react-dom": "19.2.4"
@@ -17,11 +37,15 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.20.0",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.1",
+    "pg": "^8.20.0",
+    "supabase": "^2.87.2",
     "tailwindcss": "^4",
+    "tsx": "^4.21.0",
     "typescript": "^5"
   }
 }
