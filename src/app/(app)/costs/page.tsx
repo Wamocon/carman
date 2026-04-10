@@ -3,9 +3,11 @@ import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import { calculateAcquisitionCost } from "@/lib/vehicle-market";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import type { CostEntry, Vehicle } from "@/types/domain";
+import { PhotoIcon } from "@/components/Icons";
+import { ACQUISITION_LABELS } from "@/lib/vehicle-market";
+import type { CostEntry, Vehicle, VehicleImage } from "@/types/domain";
 import { CostsFilter } from "./CostsFilter";
-import { ExportForm } from "../export/ExportForm";
+import { CostsExportButton } from "./CostsExportButton";
 
 export const metadata = {
   title: "Kosten — CarMan",
@@ -21,6 +23,17 @@ const CATEGORY_LABELS: Record<string, string> = {
   parking: "Parken",
   other: "Sonstiges",
 };
+
+const COST_CATEGORY_ORDER = [
+  "fuel",
+  "maintenance",
+  "repair",
+  "insurance",
+  "tax",
+  "leasing",
+  "parking",
+  "other",
+] as const;
 
 const PAGE_SIZE = 25;
 
@@ -66,7 +79,7 @@ export default async function CostsPage(props: {
   // Fetch vehicles for filter dropdown
   const { data: vehicles } = await supabase
     .from("vehicles")
-    .select("id, make, model, purchase_price, acquisition_type, down_payment, monthly_payment, term_months, final_payment")
+    .select("id, make, model, status, purchase_price, acquisition_type, down_payment, monthly_payment, term_months, final_payment")
     .eq("user_id", user.id)
     .eq("status", DEFAULT_VEHICLE_STATUS)
     .order("make");
@@ -75,11 +88,23 @@ export default async function CostsPage(props: {
 
   const { data: allCostsRaw } = await supabase
     .from("cost_entries")
-    .select("vehicle_id, amount, vehicles!vehicle_id!inner(status)")
+    .select("vehicle_id, category, amount, vehicles!vehicle_id!inner(status)")
     .eq("user_id", user.id)
     .eq("vehicles.status", DEFAULT_VEHICLE_STATUS);
 
   const allCostsForTotals = (allCostsRaw ?? []) as Array<{ vehicle_id: string; amount: number }>;
+
+    // category breakdown per vehicle (for vehicle cards)
+    const categoryBreakdownByVehicle = (allCostsRaw ?? []).reduce<Record<string, Record<string, number>>>(
+      (acc, entry) => {
+        const e = entry as { vehicle_id: string; category: string; amount: number };
+        const vMap = acc[e.vehicle_id] ?? {};
+        vMap[e.category] = (vMap[e.category] ?? 0) + e.amount;
+        acc[e.vehicle_id] = vMap;
+        return acc;
+      },
+      {},
+    );
   const runningCostByVehicle = allCostsForTotals.reduce<Record<string, number>>((acc, entry) => {
     acc[entry.vehicle_id] = (acc[entry.vehicle_id] ?? 0) + entry.amount;
     return acc;
@@ -143,8 +168,26 @@ export default async function CostsPage(props: {
   const totalCount = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
+  // Fetch primary images for vehicle cards
+  const { data: primaryImages } = await supabase
+    .from("vehicle_images")
+    .select("vehicle_id, storage_path")
+    .eq("user_id", user.id)
+    .eq("is_primary", true);
+
+  const imageRecords = (primaryImages ?? []) as Pick<VehicleImage, "vehicle_id" | "storage_path">[];
+  const signedImages = await Promise.all(
+    imageRecords.map(async (img) => {
+      const { data } = await supabase.storage
+        .from("vehicle-images")
+        .createSignedUrl(img.storage_path, 60 * 30);
+      return [img.vehicle_id, data?.signedUrl ?? null] as const;
+    }),
+  );
+  const primaryImageMap = Object.fromEntries(signedImages);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 stagger-children">
       <section className="section-shell p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
@@ -152,12 +195,21 @@ export default async function CostsPage(props: {
             <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Kosteneinträge verwalten</h1>
             <p className="mt-2 max-w-2xl text-sm help-copy">Filtere nach Fahrzeug oder Kategorie, um Trends zu erkennen. Für schnelle Eingaben nutze den Button rechts.</p>
           </div>
-          <Link
-            href="/costs/new"
-            className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
-          >
-            Neuer Eintrag
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <CostsExportButton
+              vehicles={allVehicles}
+              vehicleId={searchParams.vehicle_id}
+              category={searchParams.category}
+              startDate={searchParams.start_date}
+              endDate={searchParams.end_date}
+            />
+            <Link
+              href="/costs/new"
+              className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white transition hover:bg-brand-strong active:scale-[0.97]"
+            >
+              Neuer Eintrag
+            </Link>
+          </div>
         </div>
       </section>
 
@@ -169,59 +221,95 @@ export default async function CostsPage(props: {
       </section>
 
       {allVehicles.length > 0 ? (
-        <details className="section-shell p-4 sm:p-5">
-          <summary className="cursor-pointer text-sm font-semibold text-foreground">
-            Gesamtkosten auf- und zuklappen
-          </summary>
-          <div className="mt-3 space-y-3">
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-border/70 bg-card/70 p-3">
-                <p className="text-xs uppercase tracking-[0.12em] text-muted">Betriebskosten gesamt</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allRunningCosts)}</p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-card/70 p-3">
-                <p className="text-xs uppercase tracking-[0.12em] text-muted">Anschaffung gesamt</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allPurchaseCosts)}</p>
-              </div>
-              <div className="rounded-xl border border-border/70 bg-card/70 p-3">
-                <p className="text-xs uppercase tracking-[0.12em] text-muted">Gesamtaufwand</p>
-                <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allOwnershipCosts)}</p>
-              </div>
+        <section className="section-shell space-y-4 p-4 sm:p-5">
+          <div>
+            <p className="text-xs uppercase tracking-[0.15em] text-muted">Fahrzeugübersicht</p>
+            <h2 className="mt-1 text-base font-semibold text-foreground">Kosten nach Fahrzeug</h2>
+          </div>
+
+          {/* Summary totals */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-muted">Betriebskosten gesamt</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allRunningCosts)}</p>
             </div>
+            <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-muted">Anschaffung gesamt</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allPurchaseCosts)}</p>
+            </div>
+            <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+              <p className="text-xs uppercase tracking-[0.12em] text-muted">Gesamtaufwand</p>
+              <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allOwnershipCosts)}</p>
+            </div>
+          </div>
 
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-              {allVehicles.map((vehicle) => {
-                const runningCosts = runningCostByVehicle[vehicle.id] ?? 0;
-                const purchasePrice = calculateAcquisitionCost(vehicle);
-                const totalOwnership = runningCosts + purchasePrice;
+          {/* Vehicle cards — click navigates to filtered cost view for that vehicle */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {allVehicles.map((vehicle) => {
+              const runningCosts = runningCostByVehicle[vehicle.id] ?? 0;
+              const purchasePrice = calculateAcquisitionCost(vehicle);
+              const totalOwnership = runningCosts + purchasePrice;
+              const categoryBreakdown = categoryBreakdownByVehicle[vehicle.id] ?? {};
+              const imageUrl = primaryImageMap[vehicle.id] ?? undefined;
 
-                return (
+              return (
+                <article key={vehicle.id} className="surface relative overflow-hidden rounded-2xl">
+                  {/* Full-card link goes to cost list filtered for this vehicle */}
                   <Link
-                    key={vehicle.id}
-                    href={`/vehicles/${vehicle.id}`}
-                    className="rounded-xl border border-border/70 bg-card/70 p-3 transition-colors hover:bg-foreground/5"
-                  >
-                    <p className="font-medium text-foreground">{vehicle.make} {vehicle.model}</p>
-                    <div className="mt-2 space-y-1 text-xs sm:text-sm">
+                    href={`/costs?vehicle_id=${vehicle.id}`}
+                    className="absolute inset-0 z-10"
+                    aria-label={`Kosten für ${vehicle.make} ${vehicle.model} anzeigen`}
+                  />
+                  {imageUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={imageUrl}
+                      alt={`${vehicle.make} ${vehicle.model}`}
+                      className="h-36 w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-36 items-center justify-center bg-foreground/5 text-muted">
+                      <PhotoIcon className="h-8 w-8" />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <p className="font-semibold text-foreground">{vehicle.make} {vehicle.model}</p>
+                    <div className="mt-3 space-y-2 text-xs sm:text-sm">
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-muted">Betriebskosten</span>
                         <span className="font-medium text-foreground">{formatCurrency(runningCosts)}</span>
                       </div>
+                      {/* Expandable category breakdown — z-20 to be above the absolute link */}
+                      <details className="relative z-20 rounded-lg border border-border/60 bg-card/70 px-2.5 py-2">
+                        <summary className="cursor-pointer text-xs font-medium text-foreground">
+                          Kategorien anzeigen
+                        </summary>
+                        <div className="mt-2 space-y-1.5">
+                          {COST_CATEGORY_ORDER.map((cat) => (
+                            <div key={cat} className="flex items-center justify-between gap-2 text-xs">
+                              <span className="text-muted">{CATEGORY_LABELS[cat]}</span>
+                              <span className="font-medium text-foreground">{formatCurrency(categoryBreakdown[cat] ?? 0)}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </details>
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-muted">Anschaffung</span>
+                        <span className="text-muted">
+                          Anschaffung ({ACQUISITION_LABELS[vehicle.acquisition_type] ?? "Kauf"})
+                        </span>
                         <span className="font-medium text-foreground">{formatCurrency(purchasePrice)}</span>
                       </div>
-                      <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-1.5">
+                      <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-2">
                         <span className="font-medium text-foreground">Gesamtaufwand</span>
                         <span className="text-sm font-semibold text-foreground">{formatCurrency(totalOwnership)}</span>
                       </div>
                     </div>
-                  </Link>
-                );
-              })}
-            </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
-        </details>
+        </section>
       ) : null}
 
       <CostsFilter
@@ -231,17 +319,6 @@ export default async function CostsPage(props: {
         selectedStartDate={searchParams.start_date}
         selectedEndDate={searchParams.end_date}
       />
-
-      <section className="section-shell p-5 sm:p-6">
-        <div className="mb-4">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted">CSV Export</p>
-          <h2 className="mt-2 text-xl font-semibold text-foreground">Kosten als CSV exportieren</h2>
-          <p className="mt-2 text-sm help-copy">
-            Exportiere direkt aus der Kostenverwaltung. Fahrzeug und Zeitraum kannst du im Exportformular festlegen.
-          </p>
-        </div>
-        <ExportForm vehicles={allVehicles} />
-      </section>
 
       {costs.length === 0 ? (
         <section className="section-shell space-y-2 p-4 sm:p-5">
@@ -262,7 +339,7 @@ export default async function CostsPage(props: {
               </thead>
               <tbody>
                 {costs.map((c) => (
-                  <tr key={c.id} className="border-b border-border/60">
+                  <tr key={c.id} className="border-b border-border/60 transition-colors hover:bg-foreground/[0.03]">
                     <td className="py-2 pr-4">{formatDate(c.date)}</td>
                     <td className="py-2 pr-4">
                       {c.is_vehicle_sale ? "Fahrzeugverkauf" : CATEGORY_LABELS[c.category] ?? c.category}

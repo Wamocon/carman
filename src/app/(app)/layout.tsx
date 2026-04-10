@@ -54,9 +54,9 @@ export default async function AppLayout({
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-transparent md:items-start md:flex-row">
+    <div className="relative isolate flex min-h-screen flex-col bg-transparent md:flex-row md:items-start">
       <Sidebar profile={userProfile} signOutAction={signOut} locale={locale} theme={theme} />
-      <main className="min-w-0 flex-1 p-4 pb-8 md:p-8 lg:p-10">
+      <main className="relative z-0 min-w-0 flex-1 p-4 pb-8 md:p-8 lg:p-10">
         <div className="mx-auto w-full max-w-7xl">{children}</div>
       </main>
     </div>

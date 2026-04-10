@@ -125,7 +125,7 @@ export default async function VehiclesPage(props: {
   const primaryImageMap = Object.fromEntries(signedPrimaryImages);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 stagger-children">
       <section className="section-shell p-5 sm:p-6">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>

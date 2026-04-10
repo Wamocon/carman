@@ -1,6 +1,8 @@
-﻿import { createClient } from "@/lib/supabase/server";
+﻿import { ProUpgradeBanner } from "@/components/ProUpgradeBanner";
+import { createClient } from "@/lib/supabase/server";
 import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import { isProFeature } from "@/lib/utils";
+import { getLocaleFromCookies } from "@/lib/preferences.server";
 import type { UserProfile, Vehicle } from "@/types/domain";
 import { ExportForm } from "./ExportForm";
 
@@ -26,18 +28,11 @@ export default async function ExportPage() {
   const tier = userProfile?.subscription_tier ?? "free";
 
   if (isProFeature(tier)) {
+    const locale = await getLocaleFromCookies();
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 stagger-children">
         <h1 className="text-2xl font-bold text-foreground">Daten exportieren</h1>
-        <div className="section-shell bg-amber-100/60 p-6 text-center">
-          <p className="text-lg font-semibold text-amber-800">
-            Pro-Funktion
-          </p>
-          <p className="mt-2 text-sm text-amber-800/85">
-            Der Datenexport ist nur im Pro-Tarif verfügbar. Upgrade dein Konto,
-            um deine Kosten als CSV zu exportieren.
-          </p>
-        </div>
+        <ProUpgradeBanner locale={locale} />
       </div>
     );
   }
@@ -52,7 +47,7 @@ export default async function ExportPage() {
   const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model" | "status">[];
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6 stagger-children">
       <section className="section-shell p-5 sm:p-6">
         <p className="text-xs uppercase tracking-[0.2em] text-muted">CarMan Export</p>
         <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">CSV-Export erstellen</h1>

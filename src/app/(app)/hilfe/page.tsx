@@ -56,7 +56,7 @@ export default async function HelpPage() {
   const isDE = locale === "de";
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-6 md:space-y-8 stagger-children">
       {/* Hero */}
       <section className="section-shell overflow-hidden p-5 sm:p-7">
         <div>
@@ -145,8 +145,8 @@ export default async function HelpPage() {
             </div>
             <p className="text-muted">
               {isDE
-                ? "Unterhalb der Kennzahlen findest du den Kostenverlauf, den Kategorienmix und die Servicetermin-Zeitachse. Diese Widgets lassen sich einzeln ein- und ausblenden."
-                : "Below the stats you'll find the cost trend, category mix, and service appointment timeline. These widgets can be toggled on and off individually."}
+                ? "Unterhalb der Kennzahlen findest du den Kostenverlauf und den Kategorienmix. Diese Widgets lassen sich einzeln ein- und ausblenden."
+                : "Below the stats you'll find the cost trend and category mix. These widgets can be toggled on and off individually."}
             </p>
           </div>
         </details>

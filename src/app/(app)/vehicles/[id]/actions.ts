@@ -95,7 +95,6 @@ export async function deleteVehicle(vehicleId: string) {
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/cost-trend");
   revalidatePath("/dashboard/category-mix");
-  revalidatePath("/dashboard/reminder-timeline");
   revalidatePath("/servicetermine");
 
   return { error: null };
@@ -291,7 +290,6 @@ export async function sellVehicle(
   revalidatePath("/dashboard");
   revalidatePath("/dashboard/cost-trend");
   revalidatePath("/dashboard/category-mix");
-  revalidatePath("/dashboard/reminder-timeline");
   revalidatePath("/servicetermine");
   revalidatePath("/export");
 

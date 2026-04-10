@@ -122,7 +122,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6 md:space-y-8">
+    <div className="space-y-6 md:space-y-8 stagger-children">
       <section className="section-shell overflow-hidden p-5 sm:p-7">
         <div className="grid gap-6 lg:grid-cols-[1.2fr_1fr] lg:items-end">
           <div>
@@ -133,20 +133,20 @@ export default async function DashboardPage() {
             </p>
           </div>
           <div className="grid gap-2 text-sm sm:grid-cols-3 lg:grid-cols-1">
-            <Link href="/costs/new" className="rounded-xl bg-brand px-4 py-2.5 text-center font-medium text-white hover:bg-brand-strong">
+            <Link href="/costs/new" className="rounded-xl bg-brand px-4 py-2.5 text-center font-medium text-white transition hover:bg-brand-strong active:scale-[0.97]">
               {t.dashboard.addCost}
             </Link>
-            <Link href="/servicetermine/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium hover:bg-foreground/5">
+            <Link href="/servicetermine/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium transition hover:bg-foreground/5 active:scale-[0.97]">
               {t.dashboard.addReminder}
             </Link>
-            <Link href="/vehicles/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium hover:bg-foreground/5">
+            <Link href="/vehicles/new" className="rounded-xl border border-border bg-card px-4 py-2.5 text-center font-medium transition hover:bg-foreground/5 active:scale-[0.97]">
               {t.dashboard.addVehicle}
             </Link>
           </div>
         </div>
       </section>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="stagger-children grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <Link href="/costs" className="surface rounded-2xl p-4 transition-colors hover:bg-foreground/5">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">{t.common.month}</p>
           <p className="mt-2 text-sm text-muted">{t.dashboard.currentCosts}</p>
@@ -175,7 +175,6 @@ export default async function DashboardPage() {
 
       <DashboardInsights
         costs={allCosts}
-        reminders={allReminders}
         vehicles={allVehicles.map((vehicle) => ({
           id: vehicle.id,
           make: vehicle.make,

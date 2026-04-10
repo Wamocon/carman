@@ -87,10 +87,13 @@ export function buildTrendRows(costs: CostEntry[], months: string[]): TrendRow[]
     };
   });
 
-  const average = rows.reduce((sum, row) => sum + row.total, 0) / Math.max(rows.length, 1);
-
-  return rows.map((row) => ({
-    ...row,
-    average,
-  }));
+  // Rolling average: each month shows cumulative average up to that point
+  let runningTotal = 0;
+  return rows.map((row, index) => {
+    runningTotal += row.total;
+    return {
+      ...row,
+      average: runningTotal / (index + 1),
+    };
+  });
 }

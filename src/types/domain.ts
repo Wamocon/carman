@@ -273,11 +273,26 @@ interface VehicleStats {
   upcoming_reminders: number;
 }
 
+// ---- Upgrade Request -------------------------------------------------------
+
+type UpgradeRequestStatus = "pending" | "approved" | "rejected";
+
+interface UpgradeRequest {
+  id: string;
+  user_id: string;
+  billing_interval: "month" | "year";
+  status: UpgradeRequestStatus;
+  created_at: string;
+  resolved_at: string | null;
+}
+
 // ---- Exports ---------------------------------------------------------------
 
 export type {
   SubscriptionTier,
   UserProfile,
+  UpgradeRequestStatus,
+  UpgradeRequest,
   FuelType,
   AcquisitionType,
   VehicleStatus,

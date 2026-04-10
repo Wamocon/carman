@@ -11,6 +11,8 @@ import {
   SettingsIcon,
   VehicleIcon,
 } from "@/components/Icons";
+import { BrandMark } from "@/components/BrandMark";
+import { LegalLinks } from "@/components/LegalLinks";
 import { PreferenceSwitches } from "@/components/PreferenceSwitches";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale, Theme } from "@/lib/preferences";
@@ -42,10 +44,13 @@ export function Sidebar({
 
   return (
     <>
-      <header className="surface sticky top-0 z-30 mx-2 mt-2 flex items-center justify-between rounded-xl px-4 py-3 md:hidden">
-        <div>
+      <header className="surface sticky top-0 z-50 mx-2 mt-2 flex items-center justify-between rounded-xl px-4 py-3 md:hidden">
+        <div className="flex items-center gap-3">
+          <BrandMark className="h-8 w-8 rounded-md border border-border/70" alt={`${t.appName} logo`} />
+          <div>
           <span className="text-xs uppercase tracking-[0.18em] text-muted">{t.appName}</span>
           <p className="text-sm font-semibold">{t.sidebar.cockpit}</p>
+          </div>
         </div>
         <button
           onClick={() => setMobileOpen(!mobileOpen)}
@@ -64,18 +69,21 @@ export function Sidebar({
 
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black/40 md:hidden"
+          className="fixed inset-0 z-40 bg-black/40 md:hidden"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       <aside
-        className={`surface fixed inset-y-0 left-0 z-40 mt-0 flex w-72 flex-col rounded-none transition-transform md:sticky md:top-4 md:m-3 md:my-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:self-start md:rounded-2xl ${
+        className={`surface fixed inset-y-0 left-0 z-50 mt-0 flex w-72 flex-col rounded-none transition-transform md:sticky md:top-4 md:z-[60] md:m-3 md:my-4 md:h-[calc(100vh-2rem)] md:shrink-0 md:translate-x-0 md:self-start md:isolate md:rounded-2xl ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="border-b border-border/80 px-5 py-5">
-          <p className="text-xs uppercase tracking-[0.2em] text-muted">{t.appName}</p>
+          <div className="mb-2 flex items-center gap-3">
+            <BrandMark className="h-9 w-9 rounded-md border border-border/70" alt={`${t.appName} logo`} />
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">{t.appName}</p>
+          </div>
           <h2 className="mt-1 text-lg font-semibold">{t.sidebar.subtitle}</h2>
           <p className="mt-1 text-xs text-muted">{t.sidebar.tagline}</p>
         </div>
@@ -98,12 +106,17 @@ export function Sidebar({
               >
                 <span className="text-base"><Icon className="h-5 w-5" /></span>
                 <span
-                  className={`text-sm ${
+                  className={`flex-1 text-sm ${
                     active ? "text-white/85" : "text-muted group-hover:text-foreground/70"
                   }`}
                 >
                   {navLabel}
                 </span>
+                {item.key === "settings" && profile.subscription_tier === "free" && (
+                  <span className="rounded-full bg-brand/12 px-1.5 py-0.5 text-[10px] font-bold tracking-wide text-brand">
+                    PRO
+                  </span>
+                )}
               </Link>
             );
           })}
@@ -147,6 +160,12 @@ export function Sidebar({
               </button>
             </form>
           </div>
+
+          <LegalLinks
+            locale={locale}
+            className="mt-3 flex flex-wrap gap-2"
+            linkClassName="rounded-lg border border-border/70 px-3 py-1.5 text-xs font-medium text-muted transition hover:bg-foreground/5 hover:text-foreground"
+          />
         </div>
       </aside>
     </>

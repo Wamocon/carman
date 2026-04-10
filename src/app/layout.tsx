@@ -18,6 +18,11 @@ export const metadata: Metadata = {
   title: "CarMan",
   description:
     "CarMan haelt Fahrzeugkosten, Wartungen und Servicetermine an einem Ort klar und planbar.",
+  icons: {
+    icon: "/brand/app-icon/carman-idea-11-sage.svg",
+    shortcut: "/brand/app-icon/carman-idea-11-sage.svg",
+    apple: "/brand/app-icon/carman-idea-11-sage.svg",
+  },
 };
 
 export default async function RootLayout({

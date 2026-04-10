@@ -10,10 +10,12 @@ export interface CategoryMixRow {
 export function CategoryMixWidget({
   rows,
   locale,
+  categoryLabels,
   className,
 }: {
   rows: CategoryMixRow[];
   locale: Locale;
+  categoryLabels: Record<string, string>;
   className?: string;
 }) {
   if (rows.length === 0) {
@@ -25,7 +27,7 @@ export function CategoryMixWidget({
       {rows.map((row) => (
         <div key={row.category}>
           <div className="mb-1 flex items-center justify-between gap-2 text-xs">
-            <span className="capitalize text-foreground/80">{row.category}</span>
+            <span className="capitalize text-foreground/80">{categoryLabels[row.category] ?? row.category}</span>
             <span className="text-muted">{formatCurrency(row.value, locale)}</span>
           </div>
           <div className="h-2 rounded-full bg-foreground/8">

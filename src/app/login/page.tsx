@@ -1,4 +1,6 @@
 ﻿import { redirect } from "next/navigation";
+import { BrandMark } from "@/components/BrandMark";
+import { LegalLinks } from "@/components/LegalLinks";
 import { PreferenceSwitches } from "@/components/PreferenceSwitches";
 import { getDictionary } from "@/lib/i18n";
 import { getPreferencesFromCookies } from "@/lib/preferences.server";
@@ -30,7 +32,10 @@ export default async function LoginPage(props: {
       <div className="section-shell grid w-full max-w-5xl gap-8 p-5 sm:p-8 lg:grid-cols-[1.05fr_1fr]">
         <section className="rounded-2xl bg-gradient-to-br from-brand/95 via-brand-strong to-cyan-500 p-6 text-white sm:p-8">
           <div className="flex items-start justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.2em] text-white/75">{t.appName}</p>
+            <div className="flex items-center gap-3">
+              <BrandMark className="h-9 w-9 rounded-md border border-white/35 bg-white/10" alt={`${t.appName} logo`} />
+              <p className="text-xs uppercase tracking-[0.2em] text-white/75">{t.appName}</p>
+            </div>
             <div className="w-full max-w-[17rem] rounded-[1.4rem] border border-white/18 bg-slate-950/12 p-3 shadow-[0_26px_50px_-38px_rgba(15,23,42,0.7)] backdrop-blur-md">
               <PreferenceSwitches locale={locale} theme={theme} compact />
             </div>
@@ -65,6 +70,12 @@ export default async function LoginPage(props: {
               {t.loginPage.registerCta}
             </a>
           </p>
+
+          <LegalLinks
+            locale={locale}
+            className="mt-5 flex flex-wrap gap-2"
+            linkClassName="rounded-lg border border-border/70 px-3 py-1.5 text-xs font-medium text-muted transition hover:bg-foreground/5 hover:text-foreground"
+          />
         </section>
       </div>
     </main>

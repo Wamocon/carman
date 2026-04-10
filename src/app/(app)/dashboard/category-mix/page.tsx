@@ -1,14 +1,17 @@
 import Link from "next/link";
 import { CategoryMixWidget } from "@/components/CategoryMixWidget";
 import { createClient } from "@/lib/supabase/server";
+import { getLocaleFromCookies } from "@/lib/preferences.server";
+import { getDictionary } from "@/lib/i18n";
 import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
-import type { Locale } from "@/lib/preferences";
 
 export const metadata = {
   title: "Kategorienmix groß — CarMan",
 };
 
 export default async function DashboardCategoryMixPage() {
+  const locale = await getLocaleFromCookies();
+  const t = getDictionary(locale);
   const supabase = await createClient();
   const {
     data: { user },
@@ -38,8 +41,6 @@ export default async function DashboardCategoryMixPage() {
     width: max > 0 ? Math.max((row.value / max) * 100, 6) : 0,
   }));
 
-  const locale: Locale = "de";
-
   return (
     <div className="space-y-6">
       <section className="section-shell p-5 sm:p-6">
@@ -56,7 +57,7 @@ export default async function DashboardCategoryMixPage() {
       </section>
 
       <section className="section-shell p-5 sm:p-6">
-        <CategoryMixWidget rows={chartRows} locale={locale} className="space-y-4" />
+        <CategoryMixWidget rows={chartRows} locale={locale} categoryLabels={t.costCategories} className="space-y-4" />
       </section>
     </div>
   );

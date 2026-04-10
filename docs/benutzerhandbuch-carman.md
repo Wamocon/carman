@@ -101,7 +101,7 @@ graph LR
 
     SET --> SET1[Anzeigename]
     SET --> SET2[Sprache]
-    SET --> SET3[Standard Light/Dark + Signature-Themes]
+    SET --> SET3[Standard Light und Standard Dark]
     SET --> SET4[Abo-Status]
 
     SUB[Abomodell] --> FREE[Free: 1 Fahrzeug]
@@ -156,11 +156,11 @@ In der Seitenleiste findest du diese Bereiche:
 - Export
 - Einstellungen
 
-Zus�tzliche Funktionen:
+Zusätzliche Funktionen:
 - Kontoanzeige mit Free/Pro-Kennzeichnung
 - Abmelden
 - Sprache sowie ein schneller Hell/Dunkel-Wechsel
-- Detaillierte Theme-Auswahl im Profil unter Einstellungen
+- Verlinkungen zu Impressum, Datenschutz und AGB im Profilbereich
 
 ### 5.2 �bersicht verstehen
 
@@ -181,6 +181,8 @@ Weitere Inhalte:
 - Verbindungswert
 - Fahrzeugkarten mit Kennzahlen
 - Einstieg in den gro�en Kostenverlauf
+
+Im Gastbereich auf Anmeldung und Registrierung sind außerdem Verlinkungen zu Impressum, Datenschutz und AGB verfügbar. Diese öffnen sich jeweils in einem neuen Tab.
 
 ### 5.3 Gro�er Kostenverlauf
 

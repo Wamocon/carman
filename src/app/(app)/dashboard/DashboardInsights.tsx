@@ -5,30 +5,25 @@ import { useMemo, useState } from "react";
 import { CostTrendExplorer } from "../../../components/CostTrendExplorer";
 import { CategoryMixWidget } from "@/components/CategoryMixWidget";
 import { ExpandIcon } from "@/components/Icons";
-import { ReminderTimelineWidget } from "@/components/ReminderTimelineWidget";
-import { monthKey } from "@/lib/cost-trend";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/preferences";
-import type { CostEntry, Reminder, Vehicle } from "@/types/domain";
+import type { CostEntry, Vehicle } from "@/types/domain";
 
-type WidgetKey = "costTrend" | "categoryMix" | "reminderTimeline";
+type WidgetKey = "costTrend" | "categoryMix";
 
 const STORAGE_KEY = "carman_dashboard_widgets";
 
 const INITIAL_WIDGETS: Record<WidgetKey, boolean> = {
   costTrend: true,
   categoryMix: true,
-  reminderTimeline: false,
 };
 
 export function DashboardInsights({
   costs,
-  reminders,
   vehicles,
   locale,
 }: {
   costs: CostEntry[];
-  reminders: Reminder[];
   vehicles: Pick<Vehicle, "id" | "make" | "model">[];
   locale: Locale;
 }) {
@@ -87,22 +82,6 @@ export function DashboardInsights({
     }));
   }, [categoryMixVehicleIds, costs]);
 
-  const reminderTimeline = useMemo(() => {
-    const now = new Date();
-    const months: string[] = [];
-
-    for (let index = 0; index < 6; index += 1) {
-      months.push(monthKey(new Date(now.getFullYear(), now.getMonth() + index, 1)));
-    }
-
-    return months.map((month) => ({
-      month,
-      count: reminders.filter(
-        (reminder) => !reminder.is_completed && !!reminder.due_date && reminder.due_date.startsWith(month),
-      ).length,
-    }));
-  }, [reminders]);
-
   return (
     <section className="section-shell space-y-4 p-5 sm:p-6">
       <div>
@@ -132,17 +111,6 @@ export function DashboardInsights({
           }`}
         >
           {t.dashboard.widgetCategoryMix}
-        </button>
-        <button
-          type="button"
-          onClick={() => toggleWidget("reminderTimeline")}
-          className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-            enabledWidgets.reminderTimeline
-              ? "border-brand/35 bg-brand/10 text-brand"
-              : "border-border bg-card text-foreground/75 hover:bg-foreground/5"
-          }`}
-        >
-          {t.dashboard.widgetReminderTimeline}
         </button>
       </div>
 
@@ -199,19 +167,7 @@ export function DashboardInsights({
                 {locale === "de" ? "Alle Fahrzeuge" : "All vehicles"}
               </button>
             </div>
-            <CategoryMixWidget rows={categoryData} locale={locale} />
-          </article>
-        ) : null}
-
-        {enabledWidgets.reminderTimeline ? (
-          <article className="surface rounded-xl p-4">
-            <div className="mb-3 flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-foreground">{t.dashboard.widgetReminderTimeline}</h3>
-              <Link href="/dashboard/reminder-timeline" className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5" aria-label="Servicetermin-Zeitachse vergrößern">
-                <ExpandIcon className="h-4 w-4" />
-              </Link>
-            </div>
-            <ReminderTimelineWidget items={reminderTimeline} />
+            <CategoryMixWidget rows={categoryData} locale={locale} categoryLabels={t.costCategories} />
           </article>
         ) : null}
       </div>

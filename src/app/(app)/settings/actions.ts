@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { parseDriverProfileFromFormData } from "@/lib/driver-profile";
 import { createClient } from "@/lib/supabase/server";
+import type { BillingInterval } from "@/lib/subscription";
 
 export async function updateProfile(
   _prevState: { error: string | null; success: boolean },
@@ -45,6 +46,48 @@ export async function updateProfile(
   revalidatePath("/settings");
   revalidatePath("/", "layout");
 
+  return { error: null, success: true };
+}
+
+export async function requestUpgrade(
+  _prevState: { error: string | null; success: boolean },
+  formData: FormData,
+): Promise<{ error: string | null; success: boolean }> {
+  const billingInterval = (formData.get("billing_interval") as string) || "month";
+  if (billingInterval !== "month" && billingInterval !== "year") {
+    return { error: "Ungültiger Tarif.", success: false };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Nicht angemeldet.", success: false };
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("subscription_tier")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.subscription_tier === "pro") {
+    return { error: "Du nutzt bereits CarMan Pro.", success: false };
+  }
+
+  const { error } = await supabase.from("upgrade_requests").insert({
+    user_id: user.id,
+    billing_interval: billingInterval as BillingInterval,
+    status: "pending",
+  });
+
+  if (error) {
+    return { error: "Fehler beim Senden der Anfrage. Bitte versuche es erneut.", success: false };
+  }
+
+  revalidatePath("/settings");
   return { error: null, success: true };
 }
 
