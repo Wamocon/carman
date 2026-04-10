@@ -2,7 +2,7 @@
 import { canAddVehicle } from "@/lib/utils";
 import { getLocaleFromCookies } from "@/lib/preferences.server";
 import type { UserProfile } from "@/types/domain";
-import { NewVehicleForm } from "./NewVehicleForm";
+import { NewVehicleForm } from "@/app/(app)/vehicles/new/NewVehicleForm";
 
 export const metadata = {
   title: "Neues Fahrzeug — CarMan",

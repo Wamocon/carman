@@ -1,4 +1,4 @@
-# CarMan — Implementierungsstand V1
+# CarMan ï¿½ Implementierungsstand V1
 
 **Stand:** 2026-04-08
 
@@ -8,11 +8,11 @@
 
 | Frage | Entscheidung |
 |---|---|
-| Zielmarkt | Option A · B2C breiter Privatmarkt, DACH-Fokus |
-| Plattform | Option B · Web-App zuerst (Next.js), Mobile später |
+| Zielmarkt | Option A ï¿½ B2C breiter Privatmarkt, DACH-Fokus |
+| Plattform | Option B ï¿½ Web-App zuerst (Next.js), Mobile spï¿½ter |
 | V1-Scope | Wie Pitch-Tabelle, ohne OCR |
 | Free/Pro-Grenze | 1 Fahrzeug frei, kein Datenlimit, Pro = Komfort + Multi-Vehicle |
-| OCR | Rausgelassen für V1 |
+| OCR | Rausgelassen fï¿½r V1 |
 
 ---
 
@@ -21,17 +21,17 @@
 ### Authentifizierung
 - [x] E-Mail/Passwort-Registrierung mit Display-Name
 - [x] E-Mail/Passwort-Login
-- [x] Auth-Callback für E-Mail-Bestätigung
-- [x] Session-Management über Supabase SSR + Middleware
+- [x] Auth-Callback fï¿½r E-Mail-Bestï¿½tigung
+- [x] Session-Management ï¿½ber Supabase SSR + Middleware
 - [x] Automatische Profilerstellung bei Signup (DB-Trigger)
-- [x] Geschützte Routen: nicht authentifizierte Nutzer ? /login
+- [x] Geschï¿½tzte Routen: nicht authentifizierte Nutzer ? /login
 
 ### Fahrzeugverwaltung
 - [x] Fahrzeug anlegen (Marke, Modell, Baujahr, Kraftstoffart, Kennzeichen, Kilometerstand)
-- [x] Fahrzeugliste mit übersicht
+- [x] Fahrzeugliste mit ï¿½bersicht
 - [x] Fahrzeug-Detailseite mit letzten Kosten und Servicetermine
-- [x] Fahrzeug löschen (mit Bestätigung)
-- [x] Free-Limit: max. 1 Fahrzeug, Upgrade-Hinweis bei überschreitung
+- [x] Fahrzeug lï¿½schen (mit Bestï¿½tigung)
+- [x] Free-Limit: max. 1 Fahrzeug, Upgrade-Hinweis bei ï¿½berschreitung
 
 ### Kostenerfassung
 - [x] Allgemeine Kostenerfassung (Wartung, Reparatur, Versicherung, Steuer, Leasing, Parken, Sonstiges)
@@ -43,7 +43,7 @@
 ### Servicetermine
 - [x] Servicetermine nach Datum, Kilometerstand oder beidem
 - [x] Serviceterminsliste gruppiert nach Fahrzeug
-- [x] Als erledigt markieren / wieder öffnen
+- [x] Als erledigt markieren / wieder ï¿½ffnen
 - [x] Vorauswahl Fahrzeug bei Erstellung
 
 ### Dashboard
@@ -57,30 +57,30 @@
 - [x] Pro-Gate: Free-Nutzer sehen Upgrade-Hinweis
 
 ### Einstellungen
-- [x] Anzeigename ändern
+- [x] Anzeigename ï¿½ndern
 - [x] Abo-Status anzeigen
 
 ### Infrastruktur
 - [x] Supabase Server Client (SSR) + Browser Client
-- [x] Middleware für Auth-Session-Refresh
+- [x] Middleware fï¿½r Auth-Session-Refresh
 - [x] Row-Level Security auf allen Tabellen
-- [x] DB-Migration mit vollständigem Schema
+- [x] DB-Migration mit vollstï¿½ndigem Schema
 - [x] TypeScript Domain-Types
 
 ---
 
-## Nicht implementiert (bewusst für V1 ausgeschlossen)
+## Nicht implementiert (bewusst fï¿½r V1 ausgeschlossen)
 
-| Funktion | Begründung |
+| Funktion | Begrï¿½ndung |
 |---|---|
-| OCR-Belegscan | Entscheidung: erst in späterer Version |
-| GPS-Fahrtenbuch | Zu komplex für Web-MVP |
-| OBD2-Integration | Hardware-Abhängigkeit |
+| OCR-Belegscan | Entscheidung: erst in spï¿½terer Version |
+| GPS-Fahrtenbuch | Zu komplex fï¿½r Web-MVP |
+| OBD2-Integration | Hardware-Abhï¿½ngigkeit |
 | Predictive Maintenance | Braucht Datenbasis |
 | Kostenprognosen (KI) | Erst nach Datensammlung sinnvoll |
 | Flottenlogik / B2B | Anderes Produkt |
 | Dark Mode Toggle | Nice-to-have, Tailwind-Basis ist vorbereitet |
-| E-Mail-Benachrichtigungen für Servicetermine | Backend-Cronjob nötig, V2 |
+| E-Mail-Benachrichtigungen fï¿½r Servicetermine | Backend-Cronjob nï¿½tig, V2 |
 
 ---
 
@@ -100,10 +100,10 @@
 ## Datenbankschema
 
 ```
-profiles         · id, email, display_name, subscription_tier, timestamps
-vehicles         · id, Benutzer_id, make, model, year, fuel_type, license_plate, current_mileage, timestamps
-cost_entries     · id, vehicle_id, Benutzer_id, category, title, amount, date, mileage, liters, price_per_liter, notes, created_at
-Service appointments        · id, vehicle_id, Benutzer_id, title, Service appointment_type, due_date, due_mileage, is_completed, notes, created_at
+profiles         ï¿½ id, email, display_name, subscription_tier, timestamps
+vehicles         ï¿½ id, Benutzer_id, make, model, year, fuel_type, license_plate, current_mileage, timestamps
+cost_entries     ï¿½ id, vehicle_id, Benutzer_id, category, title, amount, date, mileage, liters, price_per_liter, notes, created_at
+Service appointments        ï¿½ id, vehicle_id, Benutzer_id, title, Service appointment_type, due_date, due_mileage, is_completed, notes, created_at
 ```
 
 RLS-Policies: Jeder Benutzer sieht und bearbeitet nur eigene Daten (`auth.uid() = Benutzer_id`).
@@ -158,35 +158,35 @@ src/
 - Jede Kostenposition besitzt eine eigene Detailseite unter `/costs/[id]`.
 - Pro Kostenposition koennen mehrere Kommentare gespeichert werden.
 - Rechnungen koennen pro Kostenposition hochgeladen und als Dokumentation hinterlegt werden.
-- Rechnungsdateien liegen im privaten Supabase-Storage-Bucket `cost-invoices` und werden in der App über signierte Links geöffnet.
+- Rechnungsdateien liegen im privaten Supabase-Storage-Bucket `cost-invoices` und werden in der App ï¿½ber signierte Links geï¿½ffnet.
 
 ## Dashboard- und Fahrzeugprofil-Erweiterungen
 
-- Kostenliste: Filter direkt über Tabelle, gefilterte Gesamtkosten sichtbar, Gesamtkostenbereich auf-/zuklappbar.
-- Dashboard: Liniengrafik mit Kategorien-Filter, großer Detailansicht (`/dashboard/cost-trend`), Fahrzeug- und Zeitraumauswahl auf Monatsebene.
-- Fahrzeugprofil: Kopfdaten und Detailfelder bearbeitbar, zusätzliche Fahrzeugkommentare und private Bildgalerie (`vehicle-images` Bucket).
+- Kostenliste: Filter direkt ï¿½ber Tabelle, gefilterte Gesamtkosten sichtbar, Gesamtkostenbereich auf-/zuklappbar.
+- Dashboard: Liniengrafik mit Kategorien-Filter, groï¿½er Detailansicht (`/dashboard/cost-trend`), Fahrzeug- und Zeitraumauswahl auf Monatsebene.
+- Fahrzeugprofil: Kopfdaten und Detailfelder bearbeitbar, zusï¿½tzliche Fahrzeugkommentare und private Bildgalerie (`vehicle-images` Bucket).
 
 ---
 
 ## Lokaler Supabase-Ablauf
 
-- Docker und der lokale Supabase-Stack werden über `npm run supabase:start` automatisch geprüft und bei Bedarf gestartet.
+- Docker und der lokale Supabase-Stack werden ï¿½ber `npm run supabase:start` automatisch geprï¿½ft und bei Bedarf gestartet.
 - `.env.local` wird dabei automatisch mit `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `DATABASE_URL` und `SUPABASE_DB_SCHEMA` synchronisiert.
 - Das initiale Schema liegt als formale timestamped Migration in `supabase/migrations/`.
-- Jede künftige Schema-Änderung muss über eine neue Migration erfolgen und lokal mit `npm run db:check` verifiziert werden.
-- Für Produktion werden keine manuellen Push-Befehle dokumentiert; lokal wird nur sichergestellt, dass die Migrationen fehlerfrei und vollständig für Supabase MCP sind.
+- Jede kï¿½nftige Schema-ï¿½nderung muss ï¿½ber eine neue Migration erfolgen und lokal mit `npm run db:check` verifiziert werden.
+- Fï¿½r Produktion werden keine manuellen Push-Befehle dokumentiert; lokal wird nur sichergestellt, dass die Migrationen fehlerfrei und vollstï¿½ndig fï¿½r Supabase MCP sind.
 
 ---
 
 ## Einrichtung-Anleitung
 
 1. Repository klonen, `npm install`
-2. `npm run supabase:start` ausführen, um Docker, den lokalen Supabase-Stack und `.env.local` zu synchronisieren
-3. `npm run db:reset` ausführen, um die lokale Datenbank aus Migrationen aufzubauen und Testdaten (Free/Pro) automatisch zu seeden
-4. Optional `npm run db:seed:testdata` ausführen, um nur die Testdaten idempotent neu einzuspielen
-5. Optional `npm run test:integration:local` ausführen
+2. `npm run supabase:start` ausfï¿½hren, um Docker, den lokalen Supabase-Stack und `.env.local` zu synchronisieren
+3. Optional `npm run db:reset` ausfï¿½hren, um die lokale Datenbank aus Migrationen aufzubauen und Testdaten (Free/Pro) automatisch zu seeden, wenn Testdaten bereits vorliegen, nicht ausfÃ¼hren.
+4. Optional `npm run db:seed:testdata` ausfï¿½hren, um nur die Testdaten idempotent neu einzuspielen, wenn Testdaten bereits vorliegen, nicht ausfÃ¼hren.
+5. Optional `npm run test:integration:local` ausfï¿½hren
 6. Testbenutzer-Details: siehe `docs/testbenutzer.md`
-7. `npm run dev` starten, http://localhost:3000 öffnen
+7. `npm run dev` starten, http://localhost:3000 ï¿½ffnen
 
 
 

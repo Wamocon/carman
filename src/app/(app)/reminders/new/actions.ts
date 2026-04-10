@@ -1,6 +1,7 @@
 ﻿"use server";
 
 import { redirect } from "next/navigation";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import { createClient } from "@/lib/supabase/server";
 import type { ReminderType } from "@/types/domain";
 
@@ -39,6 +40,21 @@ export async function createReminder(
 
   if (!user) {
     return { error: "Nicht angemeldet." };
+  }
+
+  const { data: vehicle, error: vehicleError } = await supabase
+    .from("vehicles")
+    .select("id, status")
+    .eq("id", vehicleId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (vehicleError || !vehicle) {
+    return { error: "Fahrzeug nicht gefunden." };
+  }
+
+  if (vehicle.status !== DEFAULT_VEHICLE_STATUS) {
+    return { error: "Für verkaufte Fahrzeuge können keine neuen Servicetermine erfasst werden." };
   }
 
   const { error } = await supabase.from("reminders").insert({

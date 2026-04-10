@@ -31,7 +31,7 @@ export default async function LoginPage(props: {
         <section className="rounded-2xl bg-gradient-to-br from-brand/95 via-brand-strong to-cyan-500 p-6 text-white sm:p-8">
           <div className="flex items-start justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.2em] text-white/75">{t.appName}</p>
-            <div className="rounded-xl bg-white/12 p-2 backdrop-blur-sm">
+            <div className="w-full max-w-[17rem] rounded-[1.4rem] border border-white/18 bg-slate-950/12 p-3 shadow-[0_26px_50px_-38px_rgba(15,23,42,0.7)] backdrop-blur-md">
               <PreferenceSwitches locale={locale} theme={theme} compact />
             </div>
           </div>

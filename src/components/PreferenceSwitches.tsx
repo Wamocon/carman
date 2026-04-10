@@ -2,8 +2,19 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDownIcon } from "@/components/Icons";
-import { LOCALE_COOKIE, THEME_COOKIE, type Locale, type Theme } from "@/lib/preferences";
+import {
+  DARK_THEMES,
+  LIGHT_THEMES,
+  LOCALE_COOKIE,
+  THEME_COOKIE,
+  getDefaultThemeForMode,
+  getThemeMode,
+  isDarkTheme,
+  themeOptions,
+  type Locale,
+  type ThemeMode,
+  type Theme,
+} from "@/lib/preferences";
 import { getDictionary } from "@/lib/i18n";
 
 function writePreferenceCookie(name: string, value: string) {
@@ -13,17 +24,19 @@ function writePreferenceCookie(name: string, value: string) {
 function applyTheme(theme: Theme) {
   const root = document.documentElement;
   root.dataset.theme = theme;
-  root.classList.toggle("dark", theme === "dark");
+  root.classList.toggle("dark", isDarkTheme(theme));
 }
 
 export function PreferenceSwitches({
   locale,
   theme,
   compact = false,
+  compactTone = "inverse",
 }: {
   locale: Locale;
   theme: Theme;
   compact?: boolean;
+  compactTone?: "inverse" | "surface";
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -39,63 +52,169 @@ export function PreferenceSwitches({
 
   const switchLocale = (nextLocale: Locale) => {
     writePreferenceCookie(LOCALE_COOKIE, nextLocale);
-    document.documentElement.lang = nextLocale;
     startTransition(() => {
       router.refresh();
     });
   };
 
-  const groupClassName = compact ? "grid gap-2" : "grid gap-3";
+  const switchThemeMode = (nextMode: ThemeMode) => {
+    switchTheme(getDefaultThemeForMode(nextMode));
+  };
+
+  const tTheme = t.themeOptions;
+  const activeMode = getThemeMode(theme);
+  const containerClassName = compact ? "grid gap-3" : "grid gap-5";
+  const useInverseCompactTone = compact && compactTone === "inverse";
+  const labelClassName = compact
+    ? useInverseCompactTone
+      ? "mb-2 text-[11px] uppercase tracking-[0.18em] text-white/82"
+      : "mb-2 text-[11px] uppercase tracking-[0.18em] text-muted"
+    : "mb-2 text-[11px] uppercase tracking-[0.18em] text-muted";
+  const compactFrameClassName = useInverseCompactTone
+    ? "grid grid-cols-2 gap-1 rounded-2xl border border-white/24 bg-slate-950/18 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.12)] backdrop-blur-md"
+    : "grid grid-cols-2 gap-1 rounded-2xl border border-border bg-card/75 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  const modeFrameClassName = compact
+    ? compactFrameClassName
+    : "grid grid-cols-2 gap-1 rounded-2xl border border-border bg-card/75 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  const activeCompactClassName = useInverseCompactTone
+    ? "bg-white text-slate-900 shadow-[0_10px_24px_-18px_rgba(255,255,255,0.85)]"
+    : "bg-foreground text-background shadow-[0_12px_24px_-18px_rgba(16,24,32,0.7)]";
+  const activeModeClassName = compact
+    ? activeCompactClassName
+    : "bg-foreground text-background shadow-[0_12px_24px_-18px_rgba(16,24,32,0.7)]";
+  const inactiveCompactClassName = useInverseCompactTone
+    ? "text-white/92 hover:bg-white/14"
+    : "text-foreground/72 hover:bg-foreground/5";
+  const inactiveModeClassName = compact
+    ? inactiveCompactClassName
+    : "text-foreground/72 hover:bg-foreground/5";
+  const localeFrameClassName = compact
+    ? compactFrameClassName
+    : "grid grid-cols-2 gap-1 rounded-2xl border border-border bg-card/75 p-1.5 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)]";
+  const activeLocaleClassName = compact
+    ? activeCompactClassName
+    : "bg-foreground text-background shadow-[0_12px_24px_-18px_rgba(16,24,32,0.7)]";
+  const inactiveLocaleClassName = compact
+    ? inactiveCompactClassName
+    : "text-foreground/72 hover:bg-foreground/5";
+  const fullThemeGridClassName = "grid gap-3 sm:grid-cols-2 xl:grid-cols-3";
+
+  function renderThemeGroup(themeIds: readonly Theme[], title: string) {
+    return (
+      <div>
+        <p className="mb-2 text-[11px] uppercase tracking-[0.16em] text-muted">{title}</p>
+        <div className={fullThemeGridClassName}>
+          {themeIds.map((themeId) => {
+            const themeOption = themeOptions[themeId];
+            const selected = theme === themeId;
+
+            return (
+              <button
+                key={themeId}
+                type="button"
+                onClick={() => switchTheme(themeId)}
+                aria-pressed={selected}
+                className={`group rounded-[1.35rem] border p-3 text-left transition-all duration-200 hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-brand/30 ${
+                  selected
+                    ? "border-brand/65 bg-card text-foreground shadow-[0_24px_50px_-36px_rgba(15,35,56,0.62)]"
+                    : "border-border/80 bg-card/70 text-foreground/85 hover:border-brand/30"
+                }`}
+              >
+                <div
+                  className="relative h-24 overflow-hidden rounded-[1rem] border"
+                  style={{
+                    background: themeOption.previewBackground,
+                    borderColor: themeOption.previewBorder,
+                    boxShadow: `inset 0 1px 0 rgba(255,255,255,0.14), 0 22px 36px -34px ${themeOption.previewAccent}`,
+                  }}
+                >
+                  <span className="absolute left-3 top-3 h-px w-14 rounded-full bg-white/55" />
+                  <span className="absolute right-3 top-3 h-6 w-16 rounded-md border border-white/35 bg-white/10 backdrop-blur-sm" />
+                  <span
+                    className="absolute bottom-3 left-3 right-3 h-8 rounded-xl"
+                    style={{
+                      border: `1px solid ${themeOption.previewBorder}`,
+                      background: "rgba(255,255,255,0.08)",
+                    }}
+                  />
+                </div>
+                <div className="mt-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-sm font-semibold text-foreground">{tTheme[themeId].name}</p>
+                    {selected ? (
+                      <span className="rounded-full bg-brand/12 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-brand">
+                        {t.common.activeTheme}
+                      </span>
+                    ) : themeOption.category === "default" ? (
+                      <span className="rounded-full bg-foreground/6 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-muted">
+                        {t.common.defaultTheme}
+                      </span>
+                    ) : themeOption.category === "easterEgg" ? (
+                      <span className="rounded-full bg-amber-500/14 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-amber-600 dark:text-amber-300">
+                        {t.common.easterEgg}
+                      </span>
+                    ) : null}
+                  </div>
+                  <p className="mt-1 text-sm text-muted">{tTheme[themeId].description}</p>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className={groupClassName} aria-live="polite" aria-busy={isPending}>
+    <div className={containerClassName} aria-live="polite" aria-busy={isPending}>
       <div>
-        <p className="mb-1 text-[11px] uppercase tracking-[0.15em] text-foreground/70">{t.common.theme}</p>
-        <div className="grid grid-cols-2 gap-1 rounded-lg border border-border bg-card/70 p-1">
-          <button
-            type="button"
-            onClick={() => switchTheme("light")}
-            aria-pressed={theme === "light"}
-            className={`rounded-md px-2 py-1 text-xs font-medium transition ${
-              theme === "light"
-                ? "bg-foreground/10 text-foreground"
-                : "text-foreground/70 hover:bg-foreground/5"
-            }`}
-          >
-            {t.common.light}
-          </button>
-          <button
-            type="button"
-            onClick={() => switchTheme("dark")}
-            aria-pressed={theme === "dark"}
-            className={`rounded-md px-2 py-1 text-xs font-medium transition ${
-              theme === "dark"
-                ? "bg-foreground/10 text-foreground"
-                : "text-foreground/70 hover:bg-foreground/5"
-            }`}
-          >
-            {t.common.dark}
-          </button>
-        </div>
+        <p className={labelClassName}>{t.common.theme}</p>
+        {compact ? (
+          <div className={modeFrameClassName}>
+            {([
+              ["light", t.common.light],
+              ["dark", t.common.dark],
+            ] as const).map(([modeId, label]) => (
+              <button
+                key={modeId}
+                type="button"
+                onClick={() => switchThemeMode(modeId)}
+                aria-pressed={activeMode === modeId}
+                className={`min-h-11 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                  activeMode === modeId ? activeModeClassName : inactiveModeClassName
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {renderThemeGroup(DARK_THEMES, t.common.darkThemes)}
+            {renderThemeGroup(LIGHT_THEMES, t.common.lightThemes)}
+          </div>
+        )}
       </div>
 
       <div>
-        <label className="mb-1 block text-[11px] uppercase tracking-[0.15em] text-foreground/70" htmlFor="language-select">
-          {t.common.language}
-        </label>
-        <div className="relative">
-          <select
-            id="language-select"
-            value={locale}
-            onChange={(e) => switchLocale(e.target.value as Locale)}
-            className="w-full appearance-none rounded-lg border border-border bg-card/70 px-3 py-2 pr-8 text-xs font-medium text-foreground/80 focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
-          >
-            <option value="de">{t.common.german}</option>
-            <option value="en">{t.common.english}</option>
-          </select>
-          <span className="pointer-events-none absolute inset-y-0 right-2 flex items-center text-foreground/50">
-            <ChevronDownIcon className="h-4 w-4" />
-          </span>
+        <p className={labelClassName}>{t.common.language}</p>
+        <div className={localeFrameClassName}>
+          {([
+            ["de", t.common.german],
+            ["en", t.common.english],
+          ] as const).map(([localeId, label]) => (
+            <button
+              key={localeId}
+              type="button"
+              onClick={() => switchLocale(localeId)}
+              aria-pressed={locale === localeId}
+              className={`min-h-11 rounded-xl px-3 py-2 text-sm font-semibold transition ${
+                locale === localeId ? activeLocaleClassName : inactiveLocaleClassName
+              }`}
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

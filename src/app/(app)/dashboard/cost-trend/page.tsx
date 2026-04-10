@@ -2,6 +2,7 @@
 import { CostTrendExplorer } from "../../../../components/CostTrendExplorer";
 import { getLocaleFromCookies } from "@/lib/preferences.server";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import type { CostEntry, Vehicle } from "@/types/domain";
 
 export const metadata = {
@@ -18,8 +19,16 @@ export default async function DashboardCostTrendPage() {
   if (!user) return null;
 
   const [{ data: costs }, { data: vehicles }] = await Promise.all([
-    supabase.from("cost_entries").select("*").eq("user_id", user.id),
-    supabase.from("vehicles").select("id, make, model").eq("user_id", user.id),
+    supabase
+      .from("cost_entries")
+      .select("*, vehicles!vehicle_id!inner(status)")
+      .eq("user_id", user.id)
+      .eq("vehicles.status", DEFAULT_VEHICLE_STATUS),
+    supabase
+      .from("vehicles")
+      .select("id, make, model")
+      .eq("user_id", user.id)
+      .eq("status", DEFAULT_VEHICLE_STATUS),
   ]);
 
   const allCosts = (costs ?? []) as CostEntry[];

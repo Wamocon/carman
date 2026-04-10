@@ -1,4 +1,5 @@
 ﻿import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import { isProFeature } from "@/lib/utils";
 import type { UserProfile, Vehicle } from "@/types/domain";
 import { ExportForm } from "./ExportForm";
@@ -43,11 +44,12 @@ export default async function ExportPage() {
 
   const { data: vehicles } = await supabase
     .from("vehicles")
-    .select("id, make, model")
+    .select("id, make, model, status")
     .eq("user_id", user.id)
+    .eq("status", DEFAULT_VEHICLE_STATUS)
     .order("make");
 
-  const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model">[];
+  const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model" | "status">[];
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">

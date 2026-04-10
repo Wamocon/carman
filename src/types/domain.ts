@@ -10,6 +10,13 @@ interface UserProfile {
   id: string;
   email: string;
   display_name: string | null;
+  driver_first_name: string | null;
+  driver_last_name: string | null;
+  driver_birth_date: string | null;
+  driver_license_country: string | null;
+  driver_license_issue_date: string | null;
+  driver_license_class: string | null;
+  driver_profile_completed: boolean;
   subscription_tier: SubscriptionTier;
   created_at: string;
   updated_at: string;
@@ -18,6 +25,16 @@ interface UserProfile {
 // ---- Vehicle --------------------------------------------------------------
 
 type FuelType = "petrol" | "diesel" | "electric" | "hybrid" | "lpg" | "cng";
+type AcquisitionType = "purchase" | "finance" | "lease";
+type VehicleStatus = "owned" | "sold";
+type AcquisitionSubtype =
+  | "cash"
+  | "dealer"
+  | "classic_loan"
+  | "balloon"
+  | "three_way"
+  | "kilometerleasing"
+  | "restwertleasing";
 
 interface Vehicle {
   id: string;
@@ -35,11 +52,22 @@ interface Vehicle {
   drive_type: string | null;
   doors: number | null;
   engine_power_kw: number | null;
+  engine_power_ps: number | null;
   engine_displacement_cc: number | null;
   special_equipment: string | null;
   catalog_source: string | null;
+  acquisition_type: AcquisitionType;
+  acquisition_subtype: AcquisitionSubtype | null;
+  down_payment: number | null;
+  monthly_payment: number | null;
+  term_months: number | null;
+  final_payment: number | null;
+  contract_start_date: string | null;
   purchase_price: number | null;
   purchase_date: string | null;
+  status: VehicleStatus;
+  sold_at: string | null;
+  sale_cost_entry_id: string | null;
   license_plate: string;
   current_mileage: number;
   image_url: string | null;
@@ -61,9 +89,17 @@ interface VehicleInsert {
   drive_type?: string | null;
   doors?: number | null;
   engine_power_kw?: number | null;
+  engine_power_ps?: number | null;
   engine_displacement_cc?: number | null;
   special_equipment?: string | null;
   catalog_source?: string | null;
+  acquisition_type?: AcquisitionType;
+  acquisition_subtype?: AcquisitionSubtype | null;
+  down_payment?: number | null;
+  monthly_payment?: number | null;
+  term_months?: number | null;
+  final_payment?: number | null;
+  contract_start_date?: string | null;
   purchase_price?: number | null;
   purchase_date?: string | null;
   license_plate: string;
@@ -127,6 +163,7 @@ interface CostEntry {
   category: CostCategory;
   title: string;
   amount: number;
+  is_vehicle_sale: boolean;
   date: string;
   mileage: number | null;
   // fuel-specific
@@ -242,6 +279,9 @@ export type {
   SubscriptionTier,
   UserProfile,
   FuelType,
+  AcquisitionType,
+  VehicleStatus,
+  AcquisitionSubtype,
   Vehicle,
   VehicleInsert,
   VehicleComment,

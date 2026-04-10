@@ -1,4 +1,5 @@
 ﻿import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import type { Reminder, Vehicle } from "@/types/domain";
 import { NewCostForm } from "./NewCostForm";
 
@@ -28,6 +29,7 @@ export default async function NewCostPage(props: {
       .from("vehicles")
       .select("*")
       .eq("user_id", user.id)
+      .eq("status", DEFAULT_VEHICLE_STATUS)
       .order("make"),
     searchParams.reminder_id
       ? supabase

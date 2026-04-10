@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ReminderTimelineWidget } from "@/components/ReminderTimelineWidget";
 import { monthKey } from "@/lib/cost-trend";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 
 export const metadata = {
   title: "Servicetermin-Zeitachse groß — CarMan",
@@ -17,8 +18,9 @@ export default async function DashboardReminderTimelinePage() {
 
   const { data: reminders } = await supabase
     .from("reminders")
-    .select("due_date")
+    .select("due_date, vehicles!inner(status)")
     .eq("user_id", user.id)
+    .eq("vehicles.status", DEFAULT_VEHICLE_STATUS)
     .eq("is_completed", false);
 
   const now = new Date();

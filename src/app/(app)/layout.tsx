@@ -41,15 +41,22 @@ export default async function AppLayout({
     id: profile.id,
     email: profile.email,
     display_name: profile.display_name,
+    driver_first_name: profile.driver_first_name,
+    driver_last_name: profile.driver_last_name,
+    driver_birth_date: profile.driver_birth_date,
+    driver_license_country: profile.driver_license_country,
+    driver_license_issue_date: profile.driver_license_issue_date,
+    driver_license_class: profile.driver_license_class,
+    driver_profile_completed: profile.driver_profile_completed,
     subscription_tier: profile.subscription_tier,
     created_at: profile.created_at,
     updated_at: profile.updated_at,
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-transparent md:flex-row">
+    <div className="flex min-h-screen flex-col bg-transparent md:items-start md:flex-row">
       <Sidebar profile={userProfile} signOutAction={signOut} locale={locale} theme={theme} />
-      <main className="flex-1 overflow-auto p-4 pb-8 md:p-8 lg:p-10">
+      <main className="min-w-0 flex-1 p-4 pb-8 md:p-8 lg:p-10">
         <div className="mx-auto w-full max-w-7xl">{children}</div>
       </main>
     </div>

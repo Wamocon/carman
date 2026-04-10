@@ -75,6 +75,15 @@ export function ArrowLeftIcon({ className = "h-4 w-4" }: IconProps) {
   );
 }
 
+export function HelpIcon({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">
+      <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M9.5 9.5a2.5 2.5 0 0 1 4.87.8c0 1.67-2.5 2.3-2.5 3.7M12 17h.01" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
 export function PhotoIcon({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden="true">

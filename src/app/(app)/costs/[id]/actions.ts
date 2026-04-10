@@ -55,9 +55,6 @@ export async function updateCostEntry(
   }
 
   const amount = parseOptionalFloat(amountStr);
-  if (amount === null || amount < 0 || amount > MAX_AMOUNT) {
-    return { error: "Bitte einen gültigen Betrag eingeben.", success: null };
-  }
 
   if (Number.isNaN(Date.parse(date))) {
     return { error: "Bitte ein gültiges Datum eingeben.", success: null };
@@ -95,7 +92,7 @@ export async function updateCostEntry(
 
   const { data: existingEntry, error: existingError } = await supabase
     .from("cost_entries")
-    .select("id, vehicle_id, reminder_id")
+    .select("id, vehicle_id, reminder_id, is_vehicle_sale")
     .eq("id", costEntryId)
     .eq("user_id", user.id)
     .single();
@@ -104,10 +101,15 @@ export async function updateCostEntry(
     return { error: "Kostenposition nicht gefunden.", success: null };
   }
 
+  const minimumAmount = existingEntry.is_vehicle_sale ? -MAX_AMOUNT : 0;
+  if (amount === null || amount < minimumAmount || amount > MAX_AMOUNT) {
+    return { error: "Bitte einen gültigen Betrag eingeben.", success: null };
+  }
+
   const { error: updateError } = await supabase
     .from("cost_entries")
     .update({
-      category: category as CostCategory,
+      category: existingEntry.is_vehicle_sale ? "other" : (category as CostCategory),
       title,
       amount,
       date,

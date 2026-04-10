@@ -1,6 +1,7 @@
 ﻿import type { Metadata } from "next";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import { getPreferencesFromCookies } from "@/lib/preferences.server";
+import { isDarkTheme } from "@/lib/preferences";
 import "./globals.css";
 
 const geistSans = Space_Grotesk({
@@ -25,12 +26,13 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const { theme, locale } = await getPreferencesFromCookies();
+  const darkTheme = isDarkTheme(theme);
 
   return (
     <html
       lang={locale}
       data-theme={theme}
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${theme === "dark" ? "dark" : ""}`}
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased ${darkTheme ? "dark" : ""}`}
     >
       <body className="flex min-h-full flex-col bg-background text-foreground">
         {children}

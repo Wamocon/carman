@@ -21,6 +21,7 @@ export function EditCostForm({ costEntry }: { costEntry: CostEntry }) {
     success: null as string | null,
   });
   const [category, setCategory] = useState<CostCategory>(costEntry.category);
+  const isVehicleSale = costEntry.is_vehicle_sale;
 
   const isFuel = category === "fuel";
 
@@ -40,25 +41,35 @@ export function EditCostForm({ costEntry }: { costEntry: CostEntry }) {
         </div>
       ) : null}
 
-      <div>
-        <label htmlFor="category" className="block text-sm font-medium text-foreground">
-          Kategorie
-        </label>
-        <select
-          id="category"
-          name="category"
-          required
-          value={category}
-          onChange={(event) => setCategory(event.target.value as CostCategory)}
-          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground"
-        >
-          {CATEGORY_OPTIONS.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </div>
+      {isVehicleSale ? (
+        <div>
+          <input type="hidden" name="category" value="other" />
+          <label className="block text-sm font-medium text-foreground">Kategorie</label>
+          <div className="mt-1 rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground">
+            Fahrzeugverkauf
+          </div>
+        </div>
+      ) : (
+        <div>
+          <label htmlFor="category" className="block text-sm font-medium text-foreground">
+            Kategorie
+          </label>
+          <select
+            id="category"
+            name="category"
+            required
+            value={category}
+            onChange={(event) => setCategory(event.target.value as CostCategory)}
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground"
+          >
+            {CATEGORY_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       <div>
         <label htmlFor="title" className="block text-sm font-medium text-foreground">
@@ -76,14 +87,14 @@ export function EditCostForm({ costEntry }: { costEntry: CostEntry }) {
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label htmlFor="amount" className="block text-sm font-medium text-foreground">
-            Betrag (€)
+            {isVehicleSale ? "Verkaufserlös (negativ)" : "Betrag (€)"}
           </label>
           <input
             id="amount"
             name="amount"
             type="number"
             required
-            min={0}
+            min={isVehicleSale ? -999999.99 : 0}
             max={999999.99}
             step="0.01"
             defaultValue={costEntry.amount}
@@ -121,7 +132,7 @@ export function EditCostForm({ costEntry }: { costEntry: CostEntry }) {
         />
       </div>
 
-      {isFuel ? (
+      {isFuel && !isVehicleSale ? (
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label htmlFor="liters" className="block text-sm font-medium text-foreground">

@@ -1,4 +1,5 @@
 ﻿import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import { formatDate } from "@/lib/utils";
 import type { Reminder, Vehicle } from "@/types/domain";
 import Link from "next/link";
@@ -23,8 +24,9 @@ export default async function RemindersPage(props: {
 
   let query = supabase
     .from("reminders")
-    .select("*, vehicles!inner(make, model)")
+    .select("*, vehicles!inner(make, model, status)")
     .eq("user_id", user.id)
+    .eq("vehicles.status", DEFAULT_VEHICLE_STATUS)
     .order("created_at", { ascending: false });
 
   if (!showCompleted) {
@@ -33,13 +35,19 @@ export default async function RemindersPage(props: {
 
   const [{ data: reminders }, { data: linkedCosts }] = await Promise.all([
     query,
-    supabase.from("cost_entries").select("id, reminder_id").eq("user_id", user.id).not("reminder_id", "is", null),
+    supabase
+      .from("cost_entries")
+      .select("id, reminder_id, vehicles!vehicle_id!inner(status)")
+      .eq("user_id", user.id)
+      .eq("vehicles.status", DEFAULT_VEHICLE_STATUS)
+      .not("reminder_id", "is", null),
   ]);
 
   const { data: vehicles } = await supabase
     .from("vehicles")
     .select("id, make, model")
-    .eq("user_id", user.id);
+    .eq("user_id", user.id)
+    .eq("status", DEFAULT_VEHICLE_STATUS);
 
   const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model">[];
   const allReminders = (reminders ?? []) as (Reminder & {

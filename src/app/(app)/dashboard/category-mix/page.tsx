@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { CategoryMixWidget } from "@/components/CategoryMixWidget";
 import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import type { Locale } from "@/lib/preferences";
 
 export const metadata = {
@@ -17,8 +18,9 @@ export default async function DashboardCategoryMixPage() {
 
   const { data: costs } = await supabase
     .from("cost_entries")
-    .select("category, amount")
-    .eq("user_id", user.id);
+    .select("category, amount, vehicles!vehicle_id!inner(status)")
+    .eq("user_id", user.id)
+    .eq("vehicles.status", DEFAULT_VEHICLE_STATUS);
 
   const rows = Array.from(
     (costs ?? []).reduce<Map<string, number>>((map, entry) => {

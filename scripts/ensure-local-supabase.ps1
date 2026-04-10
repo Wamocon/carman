@@ -40,6 +40,14 @@ function Test-SupabaseRunning {
   return $LASTEXITCODE -eq 0
 }
 
+function Sync-LocalSupabaseMigrations {
+  Write-Host "Pruefe lokale Migrationen..."
+  npx supabase migration up --local --yes
+  if ($LASTEXITCODE -ne 0) {
+    throw "Lokale Supabase-Migrationen konnten nicht angewendet werden."
+  }
+}
+
 if (-not (Test-DockerReady)) {
   Start-DockerDesktopIfNeeded
 }
@@ -51,6 +59,8 @@ if (-not (Test-SupabaseRunning)) {
     throw "Lokaler Supabase-Stack konnte nicht gestartet werden."
   }
 }
+
+Sync-LocalSupabaseMigrations
 
 if ($SyncEnv) {
   & "$PSScriptRoot\sync-local-supabase-env.ps1"

@@ -39,7 +39,7 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
   const [{ data: cost }, { data: comments }, { data: invoices }] = await Promise.all([
     supabase
       .from("cost_entries")
-      .select("*, vehicles!inner(id, make, model, license_plate)")
+      .select("*, vehicles!vehicle_id!inner(id, make, model, license_plate)")
       .eq("id", id)
       .eq("user_id", user.id)
       .single(),
@@ -64,6 +64,9 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
   const costEntry = cost as CostEntry & { vehicles: Pick<Vehicle, "id" | "make" | "model" | "license_plate"> };
   const allComments = (comments ?? []) as CostComment[];
   const allInvoices = (invoices ?? []) as CostInvoice[];
+  const categoryLabel = costEntry.is_vehicle_sale
+    ? "Fahrzeugverkauf"
+    : (CATEGORY_LABELS[costEntry.category] ?? costEntry.category);
 
   const signedInvoiceLinks = await Promise.all(
     allInvoices.map(async (invoice) => {
@@ -88,7 +91,7 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
             </Link>
             <h1 className="heading-display mt-2 text-3xl font-semibold text-foreground">Kostenposition: {costEntry.title}</h1>
             <p className="mt-2 text-sm text-muted">
-              {CATEGORY_LABELS[costEntry.category] ?? costEntry.category} · {costEntry.vehicles.make} {costEntry.vehicles.model} ({costEntry.vehicles.license_plate})
+              {categoryLabel} · {costEntry.vehicles.make} {costEntry.vehicles.model} ({costEntry.vehicles.license_plate})
             </p>
           </div>
           <Link href={`/costs/new?vehicle_id=${costEntry.vehicle_id}&category=${costEntry.category}`} className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong">
@@ -99,7 +102,7 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
 
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="surface rounded-2xl p-4">
-          <p className="text-xs uppercase tracking-[0.15em] text-muted">Betrag</p>
+          <p className="text-xs uppercase tracking-[0.15em] text-muted">{costEntry.is_vehicle_sale ? "Verkaufserlös" : "Betrag"}</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">{formatCurrency(costEntry.amount)}</p>
         </div>
         <div className="surface rounded-2xl p-4">
@@ -108,7 +111,7 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
         </div>
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">Kategorie</p>
-          <p className="mt-1 text-2xl font-semibold text-foreground">{CATEGORY_LABELS[costEntry.category] ?? costEntry.category}</p>
+          <p className="mt-1 text-2xl font-semibold text-foreground">{categoryLabel}</p>
         </div>
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">Kilometerstand</p>

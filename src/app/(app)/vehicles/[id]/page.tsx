@@ -10,17 +10,28 @@ import {
 import { getLocaleFromCookies } from "@/lib/preferences.server";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import {
+  VEHICLE_STATUS,
+  VEHICLE_STATUS_LABELS,
+} from "@/lib/vehicle-status";
+import {
+  ACQUISITION_LABELS,
+  calculateAcquisitionCost,
+  convertKwToPs,
+  STANDARD_EQUIPMENT,
+} from "@/lib/vehicle-market";
 import { localizeCatalogText } from "@/lib/vehicle-catalog";
 import type {
   CostCategory,
   CostEntry,
   Reminder,
+  UserProfile,
   Vehicle,
   VehicleComment,
   VehicleImage,
 } from "@/types/domain";
+import { ExportForm } from "@/app/(app)/export/ExportForm";
 import { VehicleCommentForm } from "./VehicleCommentForm";
-import { VehicleEditForm } from "./VehicleEditForm";
 import { VehicleImageUploadForm } from "./VehicleImageUploadForm";
 import { VehicleStandardCostPlanner } from "./VehicleStandardCostPlanner";
 import { VehicleActions } from "./VehicleActions";
@@ -46,6 +57,29 @@ const VEHICLE_TABS = [
 ] as const;
 
 type VehicleTab = (typeof VEHICLE_TABS)[number]["key"];
+
+const STANDARD_EQUIPMENT_ITEMS = new Set(
+  STANDARD_EQUIPMENT.flatMap((category) => category.items),
+);
+
+function parseSpecialEquipment(value: string | null): {
+  categorized: Array<{ category: string; items: string[] }>;
+  customItems: string[];
+} {
+  const entries = (value ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const categorized = STANDARD_EQUIPMENT.map((category) => ({
+    category: category.category,
+    items: category.items.filter((item) => entries.includes(item)),
+  })).filter((category) => category.items.length > 0);
+
+  const customItems = entries.filter((entry) => !STANDARD_EQUIPMENT_ITEMS.has(entry));
+
+  return { categorized, customItems };
+}
 
 function isVehicleTab(value: string | undefined): value is VehicleTab {
   return VEHICLE_TABS.some((tab) => tab.key === value);
@@ -99,7 +133,7 @@ export default async function VehicleDetailPage(props: {
 
   const v = vehicle as Vehicle;
 
-  const [{ data: costs }, { data: reminders }, { data: comments }, { data: images }] =
+  const [{ data: costs }, { data: reminders }, { data: comments }, { data: images }, { data: profile }] =
     await Promise.all([
       supabase
         .from("cost_entries")
@@ -123,12 +157,14 @@ export default async function VehicleDetailPage(props: {
         .eq("vehicle_id", id)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
+      supabase.from("profiles").select("subscription_tier").eq("id", user.id).single(),
     ]);
 
   const vehicleCosts = (costs ?? []) as CostEntry[];
   const recentCosts = vehicleCosts.slice(0, 10);
   const allReminders = (reminders ?? []) as Reminder[];
   const vehicleComments = (comments ?? []) as VehicleComment[];
+  const userProfile = profile as Pick<UserProfile, "subscription_tier"> | null;
   const vehicleImages = ((images ?? []) as VehicleImage[]).sort((left, right) => {
     if (left.is_primary !== right.is_primary) {
       return left.is_primary ? -1 : 1;
@@ -157,8 +193,11 @@ export default async function VehicleDetailPage(props: {
     (sum, entry) => sum + entry.amount,
     0,
   );
-  const purchasePrice = v.purchase_price ?? 0;
-  const totalOwnershipCosts = totalRunningCosts + purchasePrice;
+  const saleEntry = vehicleCosts.find((entry) => entry.id === v.sale_cost_entry_id) ?? null;
+  const acquisitionCost = calculateAcquisitionCost(v);
+  const totalOwnershipCosts = totalRunningCosts + acquisitionCost;
+  const isSold = v.status === VEHICLE_STATUS.sold;
+  const canExportVehicle = userProfile?.subscription_tier === "pro";
 
   const fuelLabels: Record<string, string> = {
     petrol: "Benzin",
@@ -212,6 +251,8 @@ export default async function VehicleDetailPage(props: {
     v.license_plate,
   ].filter(Boolean);
 
+  const specialEquipmentView = parseSpecialEquipment(v.special_equipment);
+
   return (
     <div className="space-y-6">
       <section className="section-shell overflow-hidden p-5 sm:p-6">
@@ -228,7 +269,7 @@ export default async function VehicleDetailPage(props: {
               CarMan Fahrzeugprofil
             </p>
           </div>
-          <VehicleActions vehicleId={v.id} />
+          <VehicleActions vehicleId={v.id} vehicleStatus={v.status} />
         </div>
 
         <div className="mt-4 grid gap-5 lg:grid-cols-[320px_1fr] lg:items-start">
@@ -238,7 +279,7 @@ export default async function VehicleDetailPage(props: {
               <img
                 src={primaryImage.signedUrl}
                 alt={primaryImage.image.caption ?? `${v.make} ${v.model}`}
-                className="h-64 w-full object-cover"
+                className="h-64 w-full object-contain bg-foreground/5 p-2"
               />
             ) : (
               <div className="flex h-64 flex-col items-center justify-center gap-3 bg-foreground/5 text-muted">
@@ -252,10 +293,38 @@ export default async function VehicleDetailPage(props: {
             <h1 className="heading-display text-3xl font-semibold text-foreground">
               {v.make} {v.model}
             </h1>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <span
+                className={`rounded-full px-3 py-1 text-xs font-medium ${
+                  isSold ? "bg-foreground/10 text-foreground/80" : "bg-brand/10 text-brand"
+                }`}
+              >
+                {VEHICLE_STATUS_LABELS[v.status]}
+              </span>
+              {saleEntry ? (
+                <Link
+                  href={`/costs/${saleEntry.id}`}
+                  className="rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-foreground hover:bg-foreground/5"
+                >
+                  Verkaufseintrag öffnen
+                </Link>
+              ) : null}
+            </div>
             <p className="mt-2 text-sm text-muted">{headerMeta.join(" · ")}</p>
             <p className="mt-1 text-sm text-muted">
               Kilometerstand: {v.current_mileage.toLocaleString(locale === "de" ? "de-DE" : "en-US")} km
             </p>
+            {isSold ? (
+              <div className="mt-3 rounded-xl border border-border/70 bg-card/70 px-4 py-3 text-sm text-foreground/85">
+                <p>
+                  Verkauft am {formatDate(saleEntry?.date ?? v.sold_at?.slice(0, 10) ?? new Date().toISOString().slice(0, 10), locale)}
+                  {saleEntry ? ` · Erlös ${formatCurrency(Math.abs(saleEntry.amount), locale)}` : ""}
+                </p>
+                <p className="mt-1 text-xs text-muted">
+                  Kosten, Servicetermine und globale Kennzahlen dieses Fahrzeugs werden außerhalb dieser Detailansicht nicht mehr in den Standardübersichten angezeigt.
+                </p>
+              </div>
+            ) : null}
             <p className="mt-3 max-w-2xl text-sm help-copy">
               Die Fahrzeugidentität bleibt immer sichtbar. Darunter wechselst du
               per Reiter gezielt zwischen Überblick, Kosten, Serviceterminen,
@@ -263,24 +332,28 @@ export default async function VehicleDetailPage(props: {
             </p>
 
             <div className="mt-4 flex flex-wrap gap-2">
-              <Link
-                href={`/costs/new?vehicle_id=${v.id}&category=fuel`}
-                className="rounded-xl bg-success px-3 py-2 text-sm font-medium text-white hover:opacity-90"
-              >
-                Tanken
-              </Link>
-              <Link
-                href={`/costs/new?vehicle_id=${v.id}&category=maintenance`}
-                className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:opacity-90"
-              >
-                Wartung
-              </Link>
-              <Link
-                href={`/servicetermine/new?vehicle_id=${v.id}`}
-                className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5"
-              >
-                Servicetermin
-              </Link>
+              {!isSold ? (
+                <>
+                  <Link
+                    href={`/costs/new?vehicle_id=${v.id}&category=fuel`}
+                    className="rounded-xl bg-success px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+                  >
+                    Tanken
+                  </Link>
+                  <Link
+                    href={`/costs/new?vehicle_id=${v.id}&category=maintenance`}
+                    className="rounded-xl bg-amber-500 px-3 py-2 text-sm font-medium text-white hover:opacity-90"
+                  >
+                    Wartung
+                  </Link>
+                  <Link
+                    href={`/servicetermine/new?vehicle_id=${v.id}`}
+                    className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5"
+                  >
+                    Servicetermin
+                  </Link>
+                </>
+              ) : null}
               <Link
                 href="?tab=media"
                 className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5"
@@ -295,10 +368,10 @@ export default async function VehicleDetailPage(props: {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">
-            Betriebskosten
+            {isSold ? "Saldo Fahrzeug" : "Betriebskosten"}
           </p>
           <p className="mt-2 text-sm text-muted">
-            Alle Kostenbuchungen für dieses Fahrzeug
+            {isSold ? "Kosten inklusive Verkaufserlös" : "Alle Kostenbuchungen für dieses Fahrzeug"}
           </p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
             {formatCurrency(totalRunningCosts, locale)}
@@ -306,15 +379,15 @@ export default async function VehicleDetailPage(props: {
         </div>
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">
-            Kaufpreis
+            Anschaffungskosten
           </p>
-          <p className="mt-2 text-sm text-muted">Einmaliger Anschaffungswert</p>
+          <p className="mt-2 text-sm text-muted">{ACQUISITION_LABELS[v.acquisition_type] ?? "Kauf"}</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
-            {formatCurrency(purchasePrice, locale)}
+            {formatCurrency(acquisitionCost, locale)}
           </p>
           {v.purchase_date ? (
             <p className="mt-1 text-xs text-muted">
-              gekauft am {formatDate(v.purchase_date, locale)}
+              Datum: {formatDate(v.purchase_date, locale)}
             </p>
           ) : null}
         </div>
@@ -322,7 +395,7 @@ export default async function VehicleDetailPage(props: {
           <p className="text-xs uppercase tracking-[0.15em] text-muted">
             Gesamtaufwand
           </p>
-          <p className="mt-2 text-sm text-muted">Betriebskosten plus Kaufpreis</p>
+          <p className="mt-2 text-sm text-muted">Betriebskosten plus Anschaffungskosten</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
             {formatCurrency(totalOwnershipCosts, locale)}
           </p>
@@ -550,12 +623,31 @@ export default async function VehicleDetailPage(props: {
 
       {activeTab === "costs" ? (
         <>
-          <VehicleStandardCostPlanner vehicleId={v.id} fuelType={v.fuel_type} />
+          {!isSold ? <VehicleStandardCostPlanner vehicleId={v.id} fuelType={v.fuel_type} /> : null}
 
           <section className="section-shell space-y-3 p-5 sm:p-6">
-            <h2 className="text-lg font-semibold text-foreground">
-              Kostenhistorie
-            </h2>
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div>
+                <h2 className="text-lg font-semibold text-foreground">
+                  Kostenhistorie
+                </h2>
+                <p className="mt-1 text-sm text-muted">
+                  Exportiere die Kosten dieses Fahrzeugs gezielt nach Kategorien oder Zeitraum.
+                </p>
+              </div>
+              {canExportVehicle ? (
+                <div className="w-full max-w-md">
+                  <ExportForm
+                    vehicles={[{ id: v.id, make: v.make, model: v.model, status: v.status }]}
+                    fixedVehicle={{ id: v.id, make: v.make, model: v.model, status: v.status }}
+                  />
+                </div>
+              ) : (
+                <div className="rounded-xl border border-amber-300/50 bg-amber-100/65 px-3 py-2 text-sm text-amber-800">
+                  CSV-Export für einzelne Fahrzeuge ist im Pro-Tarif verfügbar.
+                </div>
+              )}
+            </div>
             {recentCosts.length === 0 ? (
               <p className="text-sm text-muted">Keine Einträge vorhanden.</p>
             ) : (
@@ -577,7 +669,7 @@ export default async function VehicleDetailPage(props: {
                           {formatDate(costEntry.date, locale)}
                         </td>
                         <td className="py-2 pr-4">
-                          {CATEGORY_LABELS[costEntry.category]}
+                          {costEntry.is_vehicle_sale ? "Fahrzeugverkauf" : CATEGORY_LABELS[costEntry.category]}
                         </td>
                         <td className="py-2 pr-4">
                           <Link
@@ -617,9 +709,13 @@ export default async function VehicleDetailPage(props: {
             </div>
             <Link
               href={`/servicetermine/new?vehicle_id=${v.id}`}
-              className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong"
+              className={`rounded-xl px-4 py-2.5 text-sm font-medium ${
+                isSold
+                  ? "pointer-events-none border border-border bg-card text-muted"
+                  : "bg-brand text-white hover:bg-brand-strong"
+              }`}
             >
-              Neuer Servicetermin
+              {isSold ? "Nach Verkauf gesperrt" : "Neuer Servicetermin"}
             </Link>
           </div>
 
@@ -655,12 +751,14 @@ export default async function VehicleDetailPage(props: {
                       >
                         Bearbeiten
                       </Link>
-                      <Link
-                        href={`/costs/new?vehicle_id=${v.id}&category=maintenance&reminder_id=${reminder.id}&title=${encodeURIComponent(reminder.title)}&notes=${encodeURIComponent(`Erfasst aus Servicetermin: ${reminder.title}`)}`}
-                        className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-strong"
-                      >
-                        Kosten anhängen
-                      </Link>
+                      {!isSold ? (
+                        <Link
+                          href={`/costs/new?vehicle_id=${v.id}&category=maintenance&reminder_id=${reminder.id}&title=${encodeURIComponent(reminder.title)}&notes=${encodeURIComponent(`Erfasst aus Servicetermin: ${reminder.title}`)}`}
+                          className="rounded-lg bg-brand px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-strong"
+                        >
+                          Kosten anhängen
+                        </Link>
+                      ) : null}
                     </div>
                   </div>
                 </article>
@@ -759,16 +857,17 @@ export default async function VehicleDetailPage(props: {
       {activeTab === "details" ? (
         <>
           <section className="section-shell space-y-4 p-5 sm:p-6">
-            <h2 className="text-lg font-semibold text-foreground">
-              Fahrzeugdaten bearbeiten
-            </h2>
-            <VehicleEditForm vehicle={v} />
-          </section>
-
-          <section className="section-shell space-y-4 p-5 sm:p-6">
-            <h2 className="text-lg font-semibold text-foreground">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-foreground">
               Fahrzeugdetails
-            </h2>
+              </h2>
+              <Link
+                href={`/vehicles/${v.id}/edit`}
+                className="rounded-xl bg-brand px-3.5 py-2 text-sm font-medium text-white hover:bg-brand-strong"
+              >
+                Fahrzeugdaten bearbeiten
+              </Link>
+            </div>
             <div className="grid gap-3 text-sm sm:grid-cols-2 lg:grid-cols-3">
               {v.vin ? (
                 <div className="rounded-xl border border-border/70 p-3">
@@ -841,7 +940,16 @@ export default async function VehicleDetailPage(props: {
                   <p className="text-xs uppercase tracking-[0.15em] text-muted">
                     Leistung
                   </p>
-                  <p className="mt-1 text-foreground">{v.engine_power_kw} kW</p>
+                  <p className="mt-1 text-foreground">
+                    {v.engine_power_kw} kW · {v.engine_power_ps ?? convertKwToPs(v.engine_power_kw)} PS
+                  </p>
+                </div>
+              ) : v.engine_power_ps ? (
+                <div className="rounded-xl border border-border/70 p-3">
+                  <p className="text-xs uppercase tracking-[0.15em] text-muted">
+                    Leistung
+                  </p>
+                  <p className="mt-1 text-foreground">{v.engine_power_ps} PS</p>
                 </div>
               ) : null}
               {v.engine_displacement_cc ? (
@@ -864,11 +972,46 @@ export default async function VehicleDetailPage(props: {
               ) : null}
             </div>
             {v.special_equipment ? (
-              <div className="rounded-xl border border-border/70 p-3 text-sm">
+              <div className="space-y-3 rounded-xl border border-border/70 p-3 text-sm">
                 <p className="text-xs uppercase tracking-[0.15em] text-muted">
                   Sonderausstattung
                 </p>
-                <p className="mt-1 text-foreground">{v.special_equipment}</p>
+
+                {specialEquipmentView.categorized.map((group) => (
+                  <div key={group.category}>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+                      {group.category}
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {group.items.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full border border-brand/25 bg-brand/8 px-2.5 py-1 text-xs font-medium text-brand"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+
+                {specialEquipmentView.customItems.length > 0 ? (
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted">
+                      Weitere Angaben
+                    </p>
+                    <div className="mt-2 flex flex-wrap gap-1.5">
+                      {specialEquipmentView.customItems.map((item) => (
+                        <span
+                          key={item}
+                          className="rounded-full border border-border/70 bg-card px-2.5 py-1 text-xs font-medium text-foreground/80"
+                        >
+                          {item}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
               </div>
             ) : null}
           </section>

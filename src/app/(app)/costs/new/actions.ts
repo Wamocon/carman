@@ -1,6 +1,7 @@
 ﻿"use server";
 
 import { redirect } from "next/navigation";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import { createClient } from "@/lib/supabase/server";
 import type { CostCategory } from "@/types/domain";
 
@@ -87,13 +88,17 @@ export async function createCostEntry(
 
   const { data: vehicle, error: vehicleError } = await supabase
     .from("vehicles")
-    .select("id, current_mileage")
+    .select("id, current_mileage, status")
     .eq("id", vehicleId)
     .eq("user_id", user.id)
     .single();
 
   if (vehicleError || !vehicle) {
     return { error: "Fahrzeug nicht gefunden oder keine Berechtigung." };
+  }
+
+  if (vehicle.status !== DEFAULT_VEHICLE_STATUS) {
+    return { error: "Für verkaufte Fahrzeuge können keine neuen Kosten erfasst werden." };
   }
 
   let effectiveVehicleId = vehicleId;

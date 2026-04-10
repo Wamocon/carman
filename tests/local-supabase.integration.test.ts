@@ -113,7 +113,15 @@ test("local supabase can create and read app data", async (t) => {
         email,
         password,
         email_confirm: true,
-        user_metadata: { display_name: "Integration Test" },
+        user_metadata: {
+          display_name: "Integration Test",
+          driver_first_name: "Inga",
+          driver_last_name: "Tester",
+          driver_birth_date: "1993-05-17",
+          driver_license_country: "de",
+          driver_license_issue_date: "2011-08-30",
+          driver_license_class: "B",
+        },
       }),
     );
 
@@ -123,7 +131,7 @@ test("local supabase can create and read app data", async (t) => {
 
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("id, email, display_name, subscription_tier")
+      .select("id, email, display_name, subscription_tier, driver_first_name, driver_last_name, driver_birth_date, driver_license_country, driver_license_issue_date, driver_license_class, driver_profile_completed")
       .eq("id", userId)
       .single();
 
@@ -131,6 +139,38 @@ test("local supabase can create and read app data", async (t) => {
     assert.equal(profile?.email, email);
     assert.equal(profile?.display_name, "Integration Test");
     assert.equal(profile?.subscription_tier, "free");
+    assert.equal(profile?.driver_first_name, "Inga");
+    assert.equal(profile?.driver_last_name, "Tester");
+    assert.equal(profile?.driver_birth_date, "1993-05-17");
+    assert.equal(profile?.driver_license_country, "DE");
+    assert.equal(profile?.driver_license_issue_date, "2011-08-30");
+    assert.equal(profile?.driver_license_class, "B");
+    assert.equal(profile?.driver_profile_completed, true);
+
+    const { error: profileUpdateError } = await supabase
+      .from("profiles")
+      .update({
+        driver_first_name: "Inga-Maria",
+        driver_last_name: "Tester",
+        driver_birth_date: "1993-05-17",
+        driver_license_country: "AT",
+        driver_license_issue_date: "2012-09-01",
+        driver_license_class: "B",
+        driver_profile_completed: true,
+      })
+      .eq("id", userId);
+
+    assert.equal(profileUpdateError, null);
+
+    const { data: updatedProfile, error: updatedProfileError } = await supabase
+      .from("profiles")
+      .select("driver_first_name, driver_license_country")
+      .eq("id", userId)
+      .single();
+
+    assert.equal(updatedProfileError, null);
+    assert.equal(updatedProfile?.driver_first_name, "Inga-Maria");
+    assert.equal(updatedProfile?.driver_license_country, "AT");
   });
 
   await t.test("insert and read vehicle row", async () => {
@@ -162,6 +202,124 @@ test("local supabase can create and read app data", async (t) => {
 
     assert.equal(selectError, null);
     assert.equal(storedVehicle?.current_mileage, 12345);
+
+    const { error: deleteVehicleError } = await supabase
+      .from("vehicles")
+      .delete()
+      .eq("id", vehicle?.id ?? "");
+
+    assert.equal(deleteVehicleError, null);
+  });
+
+  await t.test("insert financed vehicle acquisition profile", async () => {
+    assert.ok(userId);
+
+    const { data: vehicle, error: insertError } = await supabase
+      .from("vehicles")
+      .insert({
+        user_id: userId,
+        make: "Finance",
+        model: "Edition",
+        year: 2022,
+        fuel_type: "petrol",
+        license_plate: "FIN-2022",
+        current_mileage: 54321,
+        acquisition_type: "finance",
+        acquisition_subtype: "classic_loan",
+        down_payment: 2500,
+        monthly_payment: 299,
+        term_months: 36,
+        final_payment: 4500,
+        purchase_price: 17764,
+      })
+      .select("id, acquisition_type, acquisition_subtype, down_payment, monthly_payment, term_months, final_payment")
+      .single();
+
+    assert.equal(insertError, null);
+    assert.equal(vehicle?.acquisition_type, "finance");
+    assert.equal(vehicle?.acquisition_subtype, "classic_loan");
+    assert.equal(Number(vehicle?.down_payment), 2500);
+    assert.equal(Number(vehicle?.monthly_payment), 299);
+    assert.equal(vehicle?.term_months, 36);
+    assert.equal(Number(vehicle?.final_payment), 4500);
+
+    const { error: deleteVehicleError } = await supabase
+      .from("vehicles")
+      .delete()
+      .eq("id", vehicle?.id ?? "");
+
+    assert.equal(deleteVehicleError, null);
+  });
+
+  await t.test("mark vehicle as sold with negative sale entry", async () => {
+    assert.ok(userId);
+
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from("vehicles")
+      .insert({
+        user_id: userId,
+        make: "Sold",
+        model: "Case",
+        year: 2021,
+        fuel_type: "petrol",
+        license_plate: "SOLD-1",
+        current_mileage: 77777,
+      })
+      .select("id, status")
+      .single();
+
+    assert.equal(vehicleError, null);
+    assert.equal(vehicle?.status, "owned");
+
+    const { data: saleEntry, error: saleEntryError } = await supabase
+      .from("cost_entries")
+      .insert({
+        vehicle_id: vehicle?.id,
+        user_id: userId,
+        category: "other",
+        title: "Fahrzeugverkauf",
+        amount: -9500,
+        is_vehicle_sale: true,
+        date: "2026-04-09",
+      })
+      .select("id, amount, is_vehicle_sale")
+      .single();
+
+    assert.equal(saleEntryError, null);
+    assert.equal(Number(saleEntry?.amount), -9500);
+    assert.equal(saleEntry?.is_vehicle_sale, true);
+
+    const { error: soldUpdateError } = await supabase
+      .from("vehicles")
+      .update({
+        status: "sold",
+        sold_at: "2026-04-09T12:00:00.000Z",
+        sale_cost_entry_id: saleEntry?.id,
+      })
+      .eq("id", vehicle?.id);
+
+    assert.equal(soldUpdateError, null);
+
+    const { data: storedVehicle, error: storedVehicleError } = await supabase
+      .from("vehicles")
+      .select("status, sale_cost_entry_id")
+      .eq("id", vehicle?.id ?? "")
+      .single();
+
+    assert.equal(storedVehicleError, null);
+    assert.equal(storedVehicle?.status, "sold");
+    assert.equal(storedVehicle?.sale_cost_entry_id, saleEntry?.id);
+
+    const { error: invalidNegativeError } = await supabase.from("cost_entries").insert({
+      vehicle_id: vehicle?.id,
+      user_id: userId,
+      category: "other",
+      title: "Invalid negative",
+      amount: -5,
+      date: "2026-04-10",
+    });
+
+    assert.equal(invalidNegativeError?.code, "23514");
 
     const { error: deleteVehicleError } = await supabase
       .from("vehicles")

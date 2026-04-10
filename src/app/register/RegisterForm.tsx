@@ -20,6 +20,10 @@ export function RegisterForm({ locale }: { locale: Locale }) {
     );
   }
 
+  const driverInputClass =
+    "mt-1 block h-11 w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30";
+  const driverLabelClass = "block min-h-[2.75rem] text-sm font-medium text-foreground";
+
   return (
     <form action={formAction} className="space-y-4">
       {state.error && (
@@ -71,6 +75,84 @@ export function RegisterForm({ locale }: { locale: Locale }) {
           className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground placeholder:text-muted focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
         />
       </div>
+
+      <section className="rounded-xl border border-border/70 bg-card/60 p-4">
+        <p className="text-xs uppercase tracking-[0.14em] text-muted">{t.registerForm.driverProfileTitle}</p>
+        <p className="mt-1 text-xs text-muted">{t.registerForm.driverProfileHint}</p>
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          <div>
+            <label htmlFor="driver_first_name" className={driverLabelClass}>
+              {t.registerForm.driverFirstName}
+            </label>
+            <input
+              id="driver_first_name"
+              name="driver_first_name"
+              type="text"
+              placeholder={t.registerForm.driverFirstNamePlaceholder}
+              className={driverInputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="driver_last_name" className={driverLabelClass}>
+              {t.registerForm.driverLastName}
+            </label>
+            <input
+              id="driver_last_name"
+              name="driver_last_name"
+              type="text"
+              placeholder={t.registerForm.driverLastNamePlaceholder}
+              className={driverInputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="driver_birth_date" className={driverLabelClass}>
+              {t.registerForm.driverBirthDate}
+            </label>
+            <input
+              id="driver_birth_date"
+              name="driver_birth_date"
+              type="date"
+              className={driverInputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="driver_license_country" className={driverLabelClass}>
+              {t.registerForm.driverLicenseCountry}
+            </label>
+            <input
+              id="driver_license_country"
+              name="driver_license_country"
+              type="text"
+              maxLength={2}
+              placeholder={t.registerForm.driverLicenseCountryPlaceholder}
+              className={`${driverInputClass} uppercase`}
+            />
+          </div>
+          <div>
+            <label htmlFor="driver_license_issue_date" className={driverLabelClass}>
+              {t.registerForm.driverLicenseIssueDate}
+            </label>
+            <input
+              id="driver_license_issue_date"
+              name="driver_license_issue_date"
+              type="date"
+              className={driverInputClass}
+            />
+          </div>
+          <div>
+            <label htmlFor="driver_license_class" className={driverLabelClass}>
+              {t.registerForm.driverLicenseClass}
+            </label>
+            <input
+              id="driver_license_class"
+              name="driver_license_class"
+              type="text"
+              placeholder={t.registerForm.driverLicenseClassPlaceholder}
+              className={driverInputClass}
+            />
+          </div>
+        </div>
+      </section>
 
       <p className="text-xs text-muted">{t.registerForm.note}</p>
 

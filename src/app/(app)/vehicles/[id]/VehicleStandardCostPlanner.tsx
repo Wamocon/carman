@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { createVehicleStandardCostsForPeriods } from "./actions";
 import type { FuelType } from "@/types/domain";
 
@@ -15,10 +16,11 @@ export function VehicleStandardCostPlanner({
   const [distancePerMonthKm, setDistancePerMonthKm] = useState("");
   const [energyPricePerUnit, setEnergyPricePerUnit] = useState("");
   const [baseDate, setBaseDate] = useState(() => new Date().toISOString().slice(0, 10));
-  const [periods, setPeriods] = useState({ month: true, quarter: false, year: false });
+  const [period, setPeriod] = useState<"month" | "quarter" | "year">("month");
   const [resultMessage, setResultMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const router = useRouter();
 
   const unit = fuelType === "electric" ? "kWh" : "L";
 
@@ -54,16 +56,6 @@ export function VehicleStandardCostPlanner({
     };
   }, [consumption, distance, energyPrice, hasValidInputs]);
 
-  const selectedPeriods = [
-    periods.month ? "month" : null,
-    periods.quarter ? "quarter" : null,
-    periods.year ? "year" : null,
-  ].filter(Boolean) as Array<"month" | "quarter" | "year">;
-
-  const togglePeriod = (period: "month" | "quarter" | "year", value: boolean) => {
-    setPeriods((prev) => ({ ...prev, [period]: value }));
-  };
-
   const handleCreateEntries = () => {
     setResultMessage(null);
     setErrorMessage(null);
@@ -73,18 +65,13 @@ export function VehicleStandardCostPlanner({
       return;
     }
 
-    if (selectedPeriods.length === 0) {
-      setErrorMessage("Bitte mindestens einen Zeitraum auswaehlen.");
-      return;
-    }
-
     const formData = new FormData();
     formData.append("vehicle_id", vehicleId);
     formData.append("date", baseDate);
     formData.append("consumption_per_100km", String(consumption));
     formData.append("distance_per_month_km", String(distance));
     formData.append("energy_price_per_unit", String(energyPrice));
-    selectedPeriods.forEach((period) => formData.append("periods", period));
+    formData.append("period", period);
 
     startTransition(async () => {
       const result = await createVehicleStandardCostsForPeriods(formData);
@@ -94,6 +81,7 @@ export function VehicleStandardCostPlanner({
       }
 
       setResultMessage(result.message ?? "Standardkosten wurden gespeichert.");
+      router.refresh();
     });
   };
 
@@ -192,25 +180,28 @@ export function VehicleStandardCostPlanner({
         <div className="flex flex-wrap gap-4 rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground">
           <label className="inline-flex items-center gap-2">
             <input
-              type="checkbox"
-              checked={periods.month}
-              onChange={(event) => togglePeriod("month", event.target.checked)}
+              type="radio"
+              name="period"
+              checked={period === "month"}
+              onChange={() => setPeriod("month")}
             />
             Monat
           </label>
           <label className="inline-flex items-center gap-2">
             <input
-              type="checkbox"
-              checked={periods.quarter}
-              onChange={(event) => togglePeriod("quarter", event.target.checked)}
+              type="radio"
+              name="period"
+              checked={period === "quarter"}
+              onChange={() => setPeriod("quarter")}
             />
             Quartal
           </label>
           <label className="inline-flex items-center gap-2">
             <input
-              type="checkbox"
-              checked={periods.year}
-              onChange={(event) => togglePeriod("year", event.target.checked)}
+              type="radio"
+              name="period"
+              checked={period === "year"}
+              onChange={() => setPeriod("year")}
             />
             Jahr
           </label>
@@ -221,7 +212,7 @@ export function VehicleStandardCostPlanner({
         <button
           type="button"
           onClick={handleCreateEntries}
-          disabled={!hasValidInputs || selectedPeriods.length === 0 || isPending}
+          disabled={!hasValidInputs || isPending}
           className="rounded-xl bg-brand px-4 py-2.5 text-sm font-medium text-white hover:bg-brand-strong disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isPending ? "Werte werden übernommen..." : "Standardkosten für Zeiträume setzen"}

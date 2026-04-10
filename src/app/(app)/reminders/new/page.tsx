@@ -1,4 +1,5 @@
 ﻿import { createClient } from "@/lib/supabase/server";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
 import type { Vehicle } from "@/types/domain";
 import { NewReminderForm } from "./NewReminderForm";
 
@@ -21,6 +22,7 @@ export default async function NewReminderPage(props: {
     .from("vehicles")
     .select("*")
     .eq("user_id", user.id)
+    .eq("status", DEFAULT_VEHICLE_STATUS)
     .order("make");
 
   const allVehicles = (vehicles ?? []) as Vehicle[];

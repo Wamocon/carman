@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   CostIcon,
   DashboardIcon,
+  HelpIcon,
   ReminderIcon,
   SettingsIcon,
   VehicleIcon,
@@ -21,6 +22,7 @@ const NAV_ITEMS = [
   { href: "/costs", key: "costs", icon: CostIcon },
   { href: "/servicetermine", key: "reminders", icon: ReminderIcon },
   { href: "/settings", key: "settings", icon: SettingsIcon },
+  { href: "/hilfe", key: "help", icon: HelpIcon },
 ] as const;
 
 export function Sidebar({
@@ -68,7 +70,7 @@ export function Sidebar({
       )}
 
       <aside
-        className={`surface fixed inset-y-0 left-0 z-40 mt-0 flex w-72 flex-col rounded-none transition-transform md:static md:m-3 md:my-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:rounded-2xl ${
+        className={`surface fixed inset-y-0 left-0 z-40 mt-0 flex w-72 flex-col rounded-none transition-transform md:sticky md:top-4 md:m-3 md:my-4 md:h-[calc(100vh-2rem)] md:translate-x-0 md:self-start md:rounded-2xl ${
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -78,7 +80,7 @@ export function Sidebar({
           <p className="mt-1 text-xs text-muted">{t.sidebar.tagline}</p>
         </div>
 
-        <nav className="flex-1 space-y-1.5 px-3 py-4">
+        <nav className="flex-1 space-y-1.5 overflow-y-auto px-3 py-4">
           {NAV_ITEMS.map((item) => {
             const active = pathname.startsWith(item.href);
             const navLabel = t.sidebar.nav[item.key].label;
@@ -108,9 +110,9 @@ export function Sidebar({
         </nav>
 
         <div className="border-t border-border/80 p-4">
-          <PreferenceSwitches locale={locale} theme={theme} compact />
+          <PreferenceSwitches locale={locale} theme={theme} compact compactTone="surface" />
 
-          <div className="mb-2 flex items-center gap-2">
+          <div className="mt-3 mb-2 flex items-center gap-2">
             <div className="flex-1 truncate">
               <p className="truncate text-sm font-medium text-foreground">
                 {profile.display_name ?? profile.email}
@@ -120,8 +122,8 @@ export function Sidebar({
             <span
               className={`inline-flex shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ${
                 profile.subscription_tier === "pro"
-                  ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-                  : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+                  ? "bg-success/16 text-success"
+                  : "bg-foreground/8 text-muted"
               }`}
             >
               {profile.subscription_tier === "pro" ? t.common.pro : t.common.free}

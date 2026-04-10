@@ -1,4 +1,6 @@
 ﻿import Link from "next/link";
+import { DEFAULT_VEHICLE_STATUS } from "@/lib/vehicle-status";
+import { calculateAcquisitionCost } from "@/lib/vehicle-market";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { CostEntry, Vehicle } from "@/types/domain";
@@ -64,16 +66,18 @@ export default async function CostsPage(props: {
   // Fetch vehicles for filter dropdown
   const { data: vehicles } = await supabase
     .from("vehicles")
-    .select("id, make, model, purchase_price")
+    .select("id, make, model, purchase_price, acquisition_type, down_payment, monthly_payment, term_months, final_payment")
     .eq("user_id", user.id)
+    .eq("status", DEFAULT_VEHICLE_STATUS)
     .order("make");
 
-  const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model" | "purchase_price">[];
+  const allVehicles = (vehicles ?? []) as Pick<Vehicle, "id" | "make" | "model" | "status" | "purchase_price" | "acquisition_type" | "down_payment" | "monthly_payment" | "term_months" | "final_payment">[];
 
   const { data: allCostsRaw } = await supabase
     .from("cost_entries")
-    .select("vehicle_id, amount")
-    .eq("user_id", user.id);
+    .select("vehicle_id, amount, vehicles!vehicle_id!inner(status)")
+    .eq("user_id", user.id)
+    .eq("vehicles.status", DEFAULT_VEHICLE_STATUS);
 
   const allCostsForTotals = (allCostsRaw ?? []) as Array<{ vehicle_id: string; amount: number }>;
   const runningCostByVehicle = allCostsForTotals.reduce<Record<string, number>>((acc, entry) => {
@@ -81,13 +85,14 @@ export default async function CostsPage(props: {
     return acc;
   }, {});
   const allRunningCosts = allCostsForTotals.reduce((sum, entry) => sum + entry.amount, 0);
-  const allPurchaseCosts = allVehicles.reduce((sum, vehicle) => sum + (vehicle.purchase_price ?? 0), 0);
+  const allPurchaseCosts = allVehicles.reduce((sum, vehicle) => sum + calculateAcquisitionCost(vehicle), 0);
   const allOwnershipCosts = allRunningCosts + allPurchaseCosts;
 
   let filteredTotalsQuery = supabase
     .from("cost_entries")
-    .select("amount")
-    .eq("user_id", user.id);
+    .select("amount, vehicles!vehicle_id!inner(status)")
+    .eq("user_id", user.id)
+    .eq("vehicles.status", DEFAULT_VEHICLE_STATUS);
 
   if (searchParams.vehicle_id) {
     filteredTotalsQuery = filteredTotalsQuery.eq("vehicle_id", searchParams.vehicle_id);
@@ -111,8 +116,9 @@ export default async function CostsPage(props: {
   // Build cost query
   let query = supabase
     .from("cost_entries")
-    .select("*, vehicles!inner(make, model)", { count: "exact" })
+    .select("*, vehicles!vehicle_id!inner(make, model, status)", { count: "exact" })
     .eq("user_id", user.id)
+    .eq("vehicles.status", DEFAULT_VEHICLE_STATUS)
     .order("date", { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1);
 
@@ -132,7 +138,7 @@ export default async function CostsPage(props: {
   const { data: costEntries, count } = await query;
 
   const costs = (costEntries ?? []) as (CostEntry & {
-    vehicles: { make: string; model: string };
+    vehicles: { make: string; model: string; status: string };
   })[];
   const totalCount = count ?? 0;
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
@@ -161,6 +167,62 @@ export default async function CostsPage(props: {
         </p>
         <p className="text-2xl font-semibold text-foreground">{formatCurrency(filteredRunningCosts)}</p>
       </section>
+
+      {allVehicles.length > 0 ? (
+        <details className="section-shell p-4 sm:p-5">
+          <summary className="cursor-pointer text-sm font-semibold text-foreground">
+            Gesamtkosten auf- und zuklappen
+          </summary>
+          <div className="mt-3 space-y-3">
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted">Betriebskosten gesamt</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allRunningCosts)}</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted">Anschaffung gesamt</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allPurchaseCosts)}</p>
+              </div>
+              <div className="rounded-xl border border-border/70 bg-card/70 p-3">
+                <p className="text-xs uppercase tracking-[0.12em] text-muted">Gesamtaufwand</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allOwnershipCosts)}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+              {allVehicles.map((vehicle) => {
+                const runningCosts = runningCostByVehicle[vehicle.id] ?? 0;
+                const purchasePrice = calculateAcquisitionCost(vehicle);
+                const totalOwnership = runningCosts + purchasePrice;
+
+                return (
+                  <Link
+                    key={vehicle.id}
+                    href={`/vehicles/${vehicle.id}`}
+                    className="rounded-xl border border-border/70 bg-card/70 p-3 transition-colors hover:bg-foreground/5"
+                  >
+                    <p className="font-medium text-foreground">{vehicle.make} {vehicle.model}</p>
+                    <div className="mt-2 space-y-1 text-xs sm:text-sm">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted">Betriebskosten</span>
+                        <span className="font-medium text-foreground">{formatCurrency(runningCosts)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-muted">Anschaffung</span>
+                        <span className="font-medium text-foreground">{formatCurrency(purchasePrice)}</span>
+                      </div>
+                      <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-1.5">
+                        <span className="font-medium text-foreground">Gesamtaufwand</span>
+                        <span className="text-sm font-semibold text-foreground">{formatCurrency(totalOwnership)}</span>
+                      </div>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        </details>
+      ) : null}
 
       <CostsFilter
         vehicles={allVehicles}
@@ -203,7 +265,7 @@ export default async function CostsPage(props: {
                   <tr key={c.id} className="border-b border-border/60">
                     <td className="py-2 pr-4">{formatDate(c.date)}</td>
                     <td className="py-2 pr-4">
-                      {CATEGORY_LABELS[c.category] ?? c.category}
+                      {c.is_vehicle_sale ? "Fahrzeugverkauf" : CATEGORY_LABELS[c.category] ?? c.category}
                     </td>
                     <td className="py-2 pr-4">
                       <Link href={`/costs/${c.id}`} className="font-medium text-brand hover:underline">
@@ -244,61 +306,6 @@ export default async function CostsPage(props: {
             </div>
           )}
 
-          {allVehicles.length > 0 ? (
-            <details className="section-shell p-4 sm:p-5">
-              <summary className="cursor-pointer text-sm font-semibold text-foreground">
-                Gesamtkosten auf- und zuklappen
-              </summary>
-              <div className="mt-3 space-y-3">
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-xl border border-border/70 bg-card/70 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-muted">Betriebskosten gesamt</p>
-                    <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allRunningCosts)}</p>
-                  </div>
-                  <div className="rounded-xl border border-border/70 bg-card/70 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-muted">Kaufpreise gesamt</p>
-                    <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allPurchaseCosts)}</p>
-                  </div>
-                  <div className="rounded-xl border border-border/70 bg-card/70 p-3">
-                    <p className="text-xs uppercase tracking-[0.12em] text-muted">Gesamtaufwand</p>
-                    <p className="mt-1 text-lg font-semibold text-foreground">{formatCurrency(allOwnershipCosts)}</p>
-                  </div>
-                </div>
-
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-                  {allVehicles.map((vehicle) => {
-                    const runningCosts = runningCostByVehicle[vehicle.id] ?? 0;
-                    const purchasePrice = vehicle.purchase_price ?? 0;
-                    const totalOwnership = runningCosts + purchasePrice;
-
-                    return (
-                      <Link
-                        key={vehicle.id}
-                        href={`/vehicles/${vehicle.id}`}
-                        className="rounded-xl border border-border/70 bg-card/70 p-3 transition-colors hover:bg-foreground/5"
-                      >
-                        <p className="font-medium text-foreground">{vehicle.make} {vehicle.model}</p>
-                        <div className="mt-2 space-y-1 text-xs sm:text-sm">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-muted">Betriebskosten</span>
-                            <span className="font-medium text-foreground">{formatCurrency(runningCosts)}</span>
-                          </div>
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-muted">Kaufpreis</span>
-                            <span className="font-medium text-foreground">{formatCurrency(purchasePrice)}</span>
-                          </div>
-                          <div className="flex items-center justify-between gap-2 border-t border-border/60 pt-1.5">
-                            <span className="font-medium text-foreground">Gesamtaufwand</span>
-                            <span className="text-sm font-semibold text-foreground">{formatCurrency(totalOwnership)}</span>
-                          </div>
-                        </div>
-                      </Link>
-                    );
-                  })}
-                </div>
-              </div>
-            </details>
-          ) : null}
         </>
       )}
     </div>
