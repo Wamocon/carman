@@ -4,18 +4,20 @@ import Link from "next/link";
 import { useMemo, useState } from "react";
 import { CostTrendExplorer } from "../../../components/CostTrendExplorer";
 import { CategoryMixWidget } from "@/components/CategoryMixWidget";
+import { CostCumulativeExplorer } from "@/components/CostCumulativeExplorer";
 import { ExpandIcon } from "@/components/Icons";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/preferences";
 import type { CostEntry, Vehicle } from "@/types/domain";
 
-type WidgetKey = "costTrend" | "categoryMix";
+type WidgetKey = "costTrend" | "categoryMix" | "cumulativeTrend";
 
 const STORAGE_KEY = "carman_dashboard_widgets";
 
 const INITIAL_WIDGETS: Record<WidgetKey, boolean> = {
   costTrend: true,
   categoryMix: true,
+  cumulativeTrend: true,
 };
 
 export function DashboardInsights({
@@ -56,16 +58,15 @@ export function DashboardInsights({
   };
 
   const [categoryMixVehicleIds, setCategoryMixVehicleIds] = useState<string[]>(
-    vehicles.map((vehicle) => vehicle.id),
+    vehicles.map((v) => v.id),
   );
 
   const categoryData = useMemo(() => {
     const selectedVehicleSet = new Set(categoryMixVehicleIds);
     const map = new Map<string, number>();
     for (const entry of costs) {
-      if (!selectedVehicleSet.has(entry.vehicle_id)) {
-        continue;
-      }
+      if (!selectedVehicleSet.has(entry.vehicle_id)) continue;
+      if (entry.payment_status !== "paid") continue;
       map.set(entry.category, (map.get(entry.category) ?? 0) + entry.amount);
     }
 
@@ -81,6 +82,8 @@ export function DashboardInsights({
       width: max > 0 ? Math.max((row.value / max) * 100, 6) : 0,
     }));
   }, [categoryMixVehicleIds, costs]);
+
+  const allCatMixSelected = categoryMixVehicleIds.length === vehicles.length;
 
   return (
     <section className="section-shell space-y-4 p-5 sm:p-6">
@@ -112,6 +115,17 @@ export function DashboardInsights({
         >
           {t.dashboard.widgetCategoryMix}
         </button>
+        <button
+          type="button"
+          onClick={() => toggleWidget("cumulativeTrend")}
+          className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+            enabledWidgets.cumulativeTrend
+              ? "border-brand/35 bg-brand/10 text-brand"
+              : "border-border bg-card text-foreground/75 hover:bg-foreground/5"
+          }`}
+        >
+          {t.dashboard.widgetCumulativeTrend}
+        </button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-3">
@@ -119,7 +133,11 @@ export function DashboardInsights({
           <article className="surface rounded-xl p-4 lg:col-span-2">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-foreground">{t.dashboard.widgetCostsTrend}</h3>
-              <Link href="/dashboard/cost-trend" className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5" aria-label="Kostenverlauf vergrößern">
+              <Link
+                href="/dashboard/cost-trend"
+                className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                aria-label="Kostenverlauf vergrößern"
+              >
                 <ExpandIcon className="h-4 w-4" />
               </Link>
             </div>
@@ -131,22 +149,26 @@ export function DashboardInsights({
           <article className="surface rounded-xl p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
               <h3 className="text-sm font-semibold text-foreground">{t.dashboard.widgetCategoryMix}</h3>
-              <Link href="/dashboard/category-mix" className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5" aria-label="Kategorienmix vergrößern">
+              <Link
+                href="/dashboard/category-mix"
+                className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                aria-label="Kategorienmix vergrößern"
+              >
                 <ExpandIcon className="h-4 w-4" />
               </Link>
             </div>
             <div className="mb-3 flex flex-wrap gap-2">
-              {vehicles.map((vehicle) => {
-                const active = categoryMixVehicleIds.includes(vehicle.id);
+              {vehicles.map((v) => {
+                const active = categoryMixVehicleIds.includes(v.id);
                 return (
                   <button
-                    key={vehicle.id}
+                    key={v.id}
                     type="button"
                     onClick={() =>
                       setCategoryMixVehicleIds((prev) =>
-                        prev.includes(vehicle.id)
-                          ? prev.filter((entry) => entry !== vehicle.id)
-                          : [...prev, vehicle.id],
+                        prev.includes(v.id)
+                          ? prev.filter((id) => id !== v.id)
+                          : [...prev, v.id],
                       )
                     }
                     className={`rounded-full border px-2.5 py-1 text-xs font-medium ${
@@ -155,23 +177,49 @@ export function DashboardInsights({
                         : "border-border bg-card text-foreground/70"
                     }`}
                   >
-                    {vehicle.make} {vehicle.model}
+                    {v.make} {v.model}
                   </button>
                 );
               })}
               <button
                 type="button"
-                onClick={() => setCategoryMixVehicleIds(vehicles.map((vehicle) => vehicle.id))}
+                onClick={() =>
+                  setCategoryMixVehicleIds(
+                    allCatMixSelected ? [] : vehicles.map((v) => v.id),
+                  )
+                }
                 className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground"
               >
-                {locale === "de" ? "Alle Fahrzeuge" : "All vehicles"}
+                {allCatMixSelected
+                  ? locale === "de" ? "Keine" : "None"
+                  : locale === "de" ? "Alle" : "All"}
               </button>
             </div>
             <CategoryMixWidget rows={categoryData} locale={locale} categoryLabels={t.costCategories} />
           </article>
         ) : null}
       </div>
+
+      {enabledWidgets.cumulativeTrend ? (
+        <article className="surface rounded-xl p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h3 className="text-sm font-semibold text-foreground">{t.dashboard.widgetCumulativeTrend}</h3>
+            <Link
+              href="/dashboard/cumulative-trend"
+              className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+              aria-label={locale === "de" ? "Kumulierten Kostenverlauf vergrößern" : "Expand cumulative chart"}
+            >
+              <ExpandIcon className="h-4 w-4" />
+            </Link>
+          </div>
+          <CostCumulativeExplorer
+            costs={costs}
+            vehicles={vehicles}
+            locale={locale}
+            expanded={false}
+          />
+        </article>
+      ) : null}
     </section>
   );
 }
-

@@ -72,11 +72,11 @@ export default async function DashboardPage() {
   const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
 
   const costsThisMonth = allCosts
-    .filter((c) => c.date.startsWith(thisMonth))
+    .filter((c) => c.date.startsWith(thisMonth) && c.payment_status === "paid")
     .reduce((sum, c) => sum + c.amount, 0);
 
   const costsLastMonth = allCosts
-    .filter((c) => c.date.startsWith(lastMonth))
+    .filter((c) => c.date.startsWith(lastMonth) && c.payment_status === "paid")
     .reduce((sum, c) => sum + c.amount, 0);
 
   const today = now.toISOString().split("T")[0];
@@ -88,7 +88,9 @@ export default async function DashboardPage() {
 
   function getVehicleStats(vehicleId: string) {
     const vCosts = allCosts.filter((c) => c.vehicle_id === vehicleId);
-    const totalCosts = vCosts.reduce((sum, c) => sum + c.amount, 0);
+    const totalCosts = vCosts
+      .filter((c) => c.payment_status === "paid")
+      .reduce((sum, c) => sum + c.amount, 0);
 
     const fuelEntries = vCosts.filter(
       (c) => c.category === "fuel" && c.liters && c.mileage,

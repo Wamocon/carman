@@ -12,8 +12,10 @@ const CATEGORY_OPTIONS = [
   { value: "insurance", label: "Versicherung" },
   { value: "tax", label: "Steuer" },
   { value: "leasing", label: "Leasing" },
+  { value: "financing", label: "Finanzierung" },
   { value: "parking", label: "Parken" },
   { value: "other", label: "Sonstiges" },
+  { value: "acquisition", label: "Anschaffung" },
 ] as const;
 
 export function ExportForm({

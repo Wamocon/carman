@@ -11,13 +11,16 @@ const CATEGORY_OPTIONS = [
   { value: "insurance", label: "Versicherung" },
   { value: "tax", label: "Steuer" },
   { value: "leasing", label: "Leasing" },
+  { value: "financing", label: "Finanzierung" },
   { value: "parking", label: "Parken" },
   { value: "other", label: "Sonstiges" },
+  { value: "acquisition", label: "Anschaffung" },
 ] as const;
 
 export function ExportModal({
   vehicles,
   onClose,
+  fixedVehicle,
   initialVehicleId,
   initialCategory,
   initialStartDate,
@@ -25,6 +28,7 @@ export function ExportModal({
 }: {
   vehicles: Pick<Vehicle, "id" | "make" | "model" | "status">[];
   onClose: () => void;
+  fixedVehicle?: Pick<Vehicle, "id" | "make" | "model" | "status">;
   initialVehicleId?: string;
   initialCategory?: string;
   initialStartDate?: string;
@@ -75,7 +79,10 @@ export function ExportModal({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `kosten-export-${new Date().toISOString().split("T")[0]}.csv`;
+    const baseName = fixedVehicle
+      ? `${fixedVehicle.make}-${fixedVehicle.model}`.replace(/\s+/g, "-").toLowerCase()
+      : "kosten-export";
+    a.download = `${baseName}-${new Date().toISOString().split("T")[0]}.csv`;
     a.click();
     URL.revokeObjectURL(url);
     setExporting(false);
@@ -134,24 +141,33 @@ export function ExportModal({
               </div>
             )}
 
-            <div>
-              <label htmlFor="export_vehicle_id" className="block text-sm font-medium text-foreground">
-                Fahrzeug
-              </label>
-              <select
-                id="export_vehicle_id"
-                name="vehicle_id"
-                defaultValue={initialVehicleId ?? ""}
-                className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
-              >
-                <option value="">Alle aktiven Fahrzeuge</option>
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.id}>
-                    {v.make} {v.model}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {fixedVehicle ? (
+              <>
+                <input type="hidden" name="fixed_vehicle_id" value={fixedVehicle.id} />
+                <div className="rounded-xl border border-border/70 bg-card/60 px-3 py-3 text-sm text-foreground">
+                  Export für <strong>{fixedVehicle.make} {fixedVehicle.model}</strong>
+                </div>
+              </>
+            ) : (
+              <div>
+                <label htmlFor="export_vehicle_id" className="block text-sm font-medium text-foreground">
+                  Fahrzeug
+                </label>
+                <select
+                  id="export_vehicle_id"
+                  name="vehicle_id"
+                  defaultValue={initialVehicleId ?? ""}
+                  className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand/30"
+                >
+                  <option value="">Alle aktiven Fahrzeuge</option>
+                  {vehicles.map((v) => (
+                    <option key={v.id} value={v.id}>
+                      {v.make} {v.model}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
 
             <fieldset className="space-y-2">
               <legend className="text-sm font-medium text-foreground">Kategorien</legend>

@@ -191,6 +191,7 @@ const messages = {
       widgetsTitle: "Dashboard anpassen",
       widgetsCopy: "Blende Auswertungen ein oder aus, um deinen Fokus zu steuern",
       widgetCostsTrend: "Kostenverlauf (ohne Anschaffungskosten)",
+      widgetCumulativeTrend: "Kumulierter Kostenverlauf",
       widgetCategoryMix: "Kategorienmix",
       noChartData: "Noch zu wenig Daten für eine Auswertung",
     },
@@ -201,8 +202,10 @@ const messages = {
       insurance: "Versicherung",
       tax: "Steuer",
       leasing: "Leasing",
+      financing: "Finanzierung",
       parking: "Parken",
       other: "Sonstiges",
+      acquisition: "Anschaffung",
     },
     themeOptions: {
       standardDark: {
@@ -404,6 +407,7 @@ const messages = {
       widgetsTitle: "Customize dashboard",
       widgetsCopy: "Show or hide insights to match your current workflow",
       widgetCostsTrend: "Cost trend (without acquisition costs)",
+      widgetCumulativeTrend: "Cumulative cost chart",
       widgetCategoryMix: "Category mix",
       noChartData: "Not enough data for this chart yet",
     },
@@ -414,8 +418,10 @@ const messages = {
       insurance: "Insurance",
       tax: "Tax",
       leasing: "Leasing",
+      financing: "Financing",
       parking: "Parking",
       other: "Other",
+      acquisition: "Acquisition",
     },
     themeOptions: {
       standardDark: {

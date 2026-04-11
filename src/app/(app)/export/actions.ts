@@ -12,8 +12,10 @@ const VALID_CATEGORIES = new Set([
   "insurance",
   "tax",
   "leasing",
+  "financing",
   "parking",
   "other",
+  "acquisition",
 ]);
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -23,8 +25,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   insurance: "Versicherung",
   tax: "Steuer",
   leasing: "Leasing",
+  financing: "Finanzierung",
   parking: "Parken",
   other: "Sonstiges",
+  acquisition: "Anschaffung",
 };
 
 export async function exportCosts(formData: FormData): Promise<

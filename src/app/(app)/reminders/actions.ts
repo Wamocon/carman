@@ -161,3 +161,29 @@ export async function submitLinkReminderToCost(formData: FormData) {
   await linkReminderToCost({ error: null, success: null }, formData);
 }
 
+export async function unlinkCostFromReminder(formData: FormData) {
+  const costEntryId = (formData.get("cost_entry_id") as string) ?? "";
+  const reminderId = (formData.get("reminder_id") as string) ?? "";
+
+  if (!costEntryId || !reminderId) return;
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  await supabase
+    .from("cost_entries")
+    .update({ reminder_id: null })
+    .eq("id", costEntryId)
+    .eq("user_id", user.id);
+
+  revalidatePath("/reminders");
+  revalidatePath("/servicetermine");
+  revalidatePath(`/reminders/${reminderId}`);
+  revalidatePath(`/servicetermine/${reminderId}`);
+  revalidatePath(`/costs/${costEntryId}`);
+}
+

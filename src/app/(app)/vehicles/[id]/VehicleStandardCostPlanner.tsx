@@ -8,9 +8,11 @@ import type { FuelType } from "@/types/domain";
 export function VehicleStandardCostPlanner({
   vehicleId,
   fuelType,
+  asModal = false,
 }: {
   vehicleId: string;
   fuelType: FuelType;
+  asModal?: boolean;
 }) {
   const [consumptionPer100Km, setConsumptionPer100Km] = useState("");
   const [distancePerMonthKm, setDistancePerMonthKm] = useState("");
@@ -86,13 +88,15 @@ export function VehicleStandardCostPlanner({
   };
 
   return (
-    <section className="section-shell space-y-4 p-5 sm:p-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-foreground">Intelligenter Standard-Kostenrechner</h2>
-        <span className="rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand-strong">
-          Gut zu wissen
-        </span>
-      </div>
+    <section className={asModal ? "space-y-4" : "section-shell space-y-4 p-5 sm:p-6"}>
+      {!asModal ? (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold text-foreground">Intelligenter Standard-Kostenrechner</h2>
+          <span className="rounded-full border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand-strong">
+            Gut zu wissen
+          </span>
+        </div>
+      ) : null}
 
       <p className="text-sm text-muted">
         Der Rechner zeigt typische Kosten auf Basis deines Fahrprofils und kann diese direkt als Einträge für ausgewählte Zeiträume anlegen.

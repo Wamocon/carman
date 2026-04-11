@@ -1,12 +1,14 @@
 import type { CostCategory, CostEntry } from "@/types/domain";
 
 export const COST_CATEGORY_ORDER: CostCategory[] = [
+  "acquisition",
   "fuel",
   "maintenance",
   "repair",
   "insurance",
   "tax",
   "leasing",
+  "financing",
   "parking",
   "other",
 ];
@@ -16,6 +18,14 @@ export interface TrendRow {
   total: number;
   average: number;
   categories: Partial<Record<CostCategory, number>>;
+}
+
+export interface CumulativeRow {
+  month: string;
+  cumulative: number;
+  monthDelta: number;
+  hasSaleEntry: boolean;
+  categoryCumulative: Partial<Record<CostCategory, number>>;
 }
 
 export function monthKey(date: Date): string {
@@ -94,6 +104,35 @@ export function buildTrendRows(costs: CostEntry[], months: string[]): TrendRow[]
     return {
       ...row,
       average: runningTotal / (index + 1),
+    };
+  });
+}
+
+/**
+ * Builds a cumulative running-total series from cost entries.
+ * Includes all entry types (acquisition, running costs, sale proceeds as negative).
+ * The cumulative value increases with costs and decreases with sale proceeds.
+ */
+export function buildCumulativeTrend(costs: CostEntry[], months: string[]): CumulativeRow[] {
+  let running = 0;
+  const categoryRunning: Partial<Record<CostCategory, number>> = {};
+
+  return months.map((month) => {
+    const monthEntries = costs.filter((entry) => entry.date.startsWith(month));
+    const monthDelta = monthEntries.reduce((sum, entry) => sum + entry.amount, 0);
+    const hasSaleEntry = monthEntries.some((entry) => entry.is_vehicle_sale);
+    running += monthDelta;
+
+    for (const entry of monthEntries) {
+      categoryRunning[entry.category] = (categoryRunning[entry.category] ?? 0) + entry.amount;
+    }
+
+    return {
+      month,
+      cumulative: running,
+      monthDelta,
+      hasSaleEntry,
+      categoryCumulative: { ...categoryRunning },
     };
   });
 }

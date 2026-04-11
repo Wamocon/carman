@@ -1,8 +1,9 @@
 ﻿"use server";
 
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import type { CostCategory } from "@/types/domain";
+import type { CostCategory, PaymentStatus } from "@/types/domain";
 
 const MAX_COMMENT_LENGTH = 3000;
 const MAX_NOTE_LENGTH = 2000;
@@ -45,6 +46,8 @@ export async function updateCostEntry(
   const litersStr = ((formData.get("liters") as string) ?? "").trim();
   const pricePerLiterStr = ((formData.get("price_per_liter") as string) ?? "").trim();
   const notes = ((formData.get("notes") as string) ?? "").trim() || null;
+  const paymentStatusRaw = ((formData.get("payment_status") as string) ?? "").trim();
+  const paymentStatus: PaymentStatus = paymentStatusRaw === "paid" ? "paid" : "open";
 
   if (!costEntryId || !category || !title || !amountStr || !date) {
     return { error: "Bitte alle Pflichtfelder ausfüllen.", success: null };
@@ -117,6 +120,7 @@ export async function updateCostEntry(
       liters,
       price_per_liter: pricePerLiter,
       notes,
+      payment_status: paymentStatus,
     })
     .eq("id", costEntryId)
     .eq("user_id", user.id);
@@ -250,4 +254,77 @@ export async function createCostInvoiceRecord(formData: FormData) {
 
   revalidatePath(`/costs/${costEntryId}`);
   return { error: null };
+}
+
+export async function togglePaymentStatus(costEntryId: string, newStatus: PaymentStatus) {
+  if (newStatus !== "open" && newStatus !== "paid") {
+    return { error: "Ungültiger Status." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Nicht angemeldet." };
+  }
+
+  const { data: cost, error: costError } = await supabase
+    .from("cost_entries")
+    .select("id, vehicle_id")
+    .eq("id", costEntryId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (costError || !cost) {
+    return { error: "Kostenposition nicht gefunden." };
+  }
+
+  const { error } = await supabase
+    .from("cost_entries")
+    .update({ payment_status: newStatus })
+    .eq("id", costEntryId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: "Status konnte nicht geändert werden." };
+  }
+
+  revalidatePath(`/costs/${costEntryId}`);
+  revalidatePath("/costs");
+  revalidatePath(`/vehicles/${cost.vehicle_id}`);
+  revalidatePath("/dashboard");
+
+  return { error: null };
+}
+
+export async function deleteCostEntry(costEntryId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return;
+
+  const { data: cost, error: costError } = await supabase
+    .from("cost_entries")
+    .select("id, vehicle_id")
+    .eq("id", costEntryId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (costError || !cost) return;
+
+  await supabase
+    .from("cost_entries")
+    .delete()
+    .eq("id", costEntryId)
+    .eq("user_id", user.id);
+
+  revalidatePath("/costs");
+  revalidatePath(`/vehicles/${cost.vehicle_id}`);
+  revalidatePath("/dashboard");
+
+  redirect("/costs");
 }

@@ -952,6 +952,11 @@ export function NewVehicleForm({ locale }: { locale: Locale }) {
         </p>
       ) : null}
 
+      <div className="rounded-xl border border-border/70 bg-card/60 px-3 py-2 text-xs text-muted">
+        Fahrzeugpapiere (Zulassungsbescheinigung, Versicherung, TÜV-Bericht) können nach dem Anlegen
+        unter Stammdaten hochgeladen werden.
+      </div>
+
       <button
         type="submit"
         disabled={pending}

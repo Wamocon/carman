@@ -152,8 +152,12 @@ type CostCategory =
   | "insurance"
   | "tax"
   | "leasing"
+  | "financing"
   | "parking"
-  | "other";
+  | "other"
+  | "acquisition";
+
+type PaymentStatus = "open" | "paid";
 
 interface CostEntry {
   id: string;
@@ -164,6 +168,7 @@ interface CostEntry {
   title: string;
   amount: number;
   is_vehicle_sale: boolean;
+  payment_status: PaymentStatus;
   date: string;
   mileage: number | null;
   // fuel-specific
@@ -181,6 +186,7 @@ interface CostEntryInsert {
   title: string;
   amount: number;
   date: string;
+  payment_status?: PaymentStatus;
   mileage?: number | null;
   liters?: number | null;
   price_per_liter?: number | null;
@@ -286,6 +292,33 @@ interface UpgradeRequest {
   resolved_at: string | null;
 }
 
+// ---- Vehicle Documents ----------------------------------------------------
+
+type VehicleDocumentType = "registration" | "insurance" | "inspection" | "other";
+
+interface VehicleDocument {
+  id: string;
+  vehicle_id: string;
+  user_id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  file_size_bytes: number;
+  document_type: VehicleDocumentType;
+  caption: string | null;
+  created_at: string;
+}
+
+interface VehicleDocumentInsert {
+  vehicle_id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string;
+  file_size_bytes: number;
+  document_type?: VehicleDocumentType;
+  caption?: string | null;
+}
+
 // ---- Exports ---------------------------------------------------------------
 
 export type {
@@ -304,12 +337,16 @@ export type {
   VehicleImage,
   VehicleImageInsert,
   CostCategory,
+  PaymentStatus,
   CostEntry,
   CostEntryInsert,
   CostComment,
   CostCommentInsert,
   CostInvoice,
   CostInvoiceInsert,
+  VehicleDocumentType,
+  VehicleDocument,
+  VehicleDocumentInsert,
   ReminderType,
   Reminder,
   ReminderInsert,

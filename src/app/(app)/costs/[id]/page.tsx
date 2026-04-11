@@ -1,8 +1,10 @@
 ﻿import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CommentForm } from "./CommentForm";
+import { DeleteCostButton } from "./DeleteCostButton";
 import { EditCostForm } from "./EditCostForm";
 import { InvoiceUploadForm } from "./InvoiceUploadForm";
+import { PaymentStatusToggle } from "./PaymentStatusToggle";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { CostEntry, CostComment, CostInvoice, Vehicle } from "@/types/domain";
@@ -14,8 +16,10 @@ const CATEGORY_LABELS: Record<string, string> = {
   insurance: "Versicherung",
   tax: "Steuer",
   leasing: "Leasing",
+  financing: "Finanzierung",
   parking: "Parken",
   other: "Sonstiges",
+  acquisition: "Anschaffung",
 };
 
 export async function generateMetadata(props: { params: Promise<{ id: string }> }) {
@@ -100,7 +104,7 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
         </div>
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">{costEntry.is_vehicle_sale ? "Verkaufserlös" : "Betrag"}</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">{formatCurrency(costEntry.amount)}</p>
@@ -116,6 +120,12 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">Kilometerstand</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">{costEntry.mileage ? `${costEntry.mileage.toLocaleString("de-DE")} km` : "-"}</p>
+        </div>
+        <div className="surface rounded-2xl p-4">
+          <p className="text-xs uppercase tracking-[0.15em] text-muted">Zahlungsstatus</p>
+          <div className="mt-2">
+            <PaymentStatusToggle costEntryId={costEntry.id} currentStatus={costEntry.payment_status} />
+          </div>
         </div>
       </section>
 
@@ -190,6 +200,16 @@ export default async function CostDetailPage(props: { params: Promise<{ id: stri
             ))}
           </ul>
         )}
+      </section>
+
+      <section className="section-shell space-y-4 p-5 sm:p-6">
+        <div>
+          <h2 className="text-lg font-semibold text-foreground">Gefahrenbereich</h2>
+          <p className="mt-1 text-sm text-muted">
+            Das Löschen dieses Eintrags entfernt alle zugehörigen Daten dauerhaft. Diese Aktion kann nicht rückgängig gemacht werden.
+          </p>
+        </div>
+        <DeleteCostButton costEntryId={costEntry.id} />
       </section>
     </div>
   );

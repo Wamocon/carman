@@ -1,16 +1,18 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import type { CostCategory, CostEntry } from "@/types/domain";
+import type { CostCategory, CostEntry, PaymentStatus } from "@/types/domain";
 import { updateCostEntry } from "./actions";
 
 const CATEGORY_OPTIONS: { value: CostCategory; label: string }[] = [
+  { value: "acquisition", label: "Anschaffung" },
   { value: "fuel", label: "Tanken" },
   { value: "maintenance", label: "Wartung" },
   { value: "repair", label: "Reparatur" },
   { value: "insurance", label: "Versicherung" },
   { value: "tax", label: "Steuer" },
   { value: "leasing", label: "Leasing" },
+  { value: "financing", label: "Finanzierung" },
   { value: "parking", label: "Parken" },
   { value: "other", label: "Sonstiges" },
 ];
@@ -21,6 +23,7 @@ export function EditCostForm({ costEntry }: { costEntry: CostEntry }) {
     success: null as string | null,
   });
   const [category, setCategory] = useState<CostCategory>(costEntry.category);
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(costEntry.payment_status);
   const isVehicleSale = costEntry.is_vehicle_sale;
 
   const isFuel = category === "fuel";
@@ -166,6 +169,23 @@ export function EditCostForm({ costEntry }: { costEntry: CostEntry }) {
           </div>
         </div>
       ) : null}
+
+      <div>
+        <label htmlFor="payment_status" className="block text-sm font-medium text-foreground">
+          Zahlungsstatus
+        </label>
+        <select
+          id="payment_status"
+          name="payment_status"
+          value={paymentStatus}
+          onChange={(event) => setPaymentStatus(event.target.value as PaymentStatus)}
+          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2.5 text-sm text-foreground"
+        >
+          <option value="open">Offen</option>
+          <option value="paid">Bezahlt</option>
+        </select>
+        <p className="mt-1 text-xs text-muted">Nur bezahlte Kosten werden in Summen und Übersichten eingerechnet.</p>
+      </div>
 
       <div>
         <label htmlFor="notes" className="block text-sm font-medium text-foreground">

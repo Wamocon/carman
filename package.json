@@ -12,6 +12,8 @@
     "db:reset:no-seed": "powershell -ExecutionPolicy Bypass -File ./scripts/reset-local-supabase-db.ps1",
     "predb:seed:testdata": "npm run supabase:start",
     "db:seed:testdata": "node --env-file=.env.local --import tsx ./scripts/seed-local-test-data.ts",
+    "db:seed:testdata:staging": "node --env-file=.env.staging --import tsx ./scripts/seed-local-test-data.ts",
+    "db:seed:testdata:production": "node --env-file=.env.production --import tsx ./scripts/seed-local-test-data.ts",
     "predb:lint": "npm run supabase:start",
     "db:lint": "npx supabase db lint",
     "predb:diff": "npm run supabase:start",

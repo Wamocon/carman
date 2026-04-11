@@ -32,6 +32,7 @@ const supabase = createClient(supabaseUrl, serviceRoleKey, {
 
 const COST_INVOICE_BUCKET = "cost-invoices";
 const VEHICLE_IMAGE_BUCKET = "vehicle-images";
+const VEHICLE_DOCUMENT_BUCKET = "vehicle-documents";
 
 function isRetryableAuthError(error: unknown): boolean {
   if (!error || typeof error !== "object") return false;
@@ -260,6 +261,15 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
     throw deleteCostEntriesError;
   }
 
+  const { error: deleteVehicleDocsError } = await supabase
+    .from("vehicle_documents")
+    .delete()
+    .in("user_id", seedUserIds);
+
+  if (deleteVehicleDocsError) {
+    throw deleteVehicleDocsError;
+  }
+
   const { error: deleteRemindersError } = await supabase
     .from("reminders")
     .delete()
@@ -425,6 +435,119 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
     throw upsertVehiclesError;
   }
 
+  // ── Servicetermine ───────────────────────────────────────────────────────────
+  // Reminders are upserted BEFORE cost entries so that linked cost entries can
+  // reference reminders via the reminder_id foreign key without constraint errors.
+  const reminders = [
+    // ── Abgeschlossene Servicetermine (is_completed = true, mit verknüpften Kosten) ──
+    {
+      id: "44444444-4444-4444-8444-444444444403",
+      vehicle_id: vehicles[0].id,
+      user_id: freeUserId,
+      title: "Inspektion 30.000 km",
+      reminder_type: "mileage",
+      due_mileage: 30000,
+      is_completed: true,
+      notes: "Oelwechsel + Inspektion abgeschlossen",
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444404",
+      vehicle_id: vehicles[0].id,
+      user_id: freeUserId,
+      title: "Winterreifen Saison 2024",
+      reminder_type: "date",
+      due_date: "2024-10-15",
+      is_completed: true,
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444413",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      title: "Grosse Inspektion 60.000 km",
+      reminder_type: "mileage",
+      due_mileage: 60000,
+      is_completed: true,
+      notes: "Zahnriemen, Wasserpumpe, Thermostat, Inspektion 60k",
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444414",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      title: "Bremsen Vorderachse erneuern",
+      reminder_type: "mileage",
+      due_mileage: 55000,
+      is_completed: true,
+      notes: "ATE Bremsscheiben 300mm, TRW Belaege VA",
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444422",
+      vehicle_id: vehicles[2].id,
+      user_id: proUserId,
+      title: "HU/AU Hauptuntersuchung 2026",
+      reminder_type: "date",
+      due_date: "2026-03-01",
+      is_completed: true,
+      notes: "HU bestanden ohne Maengel",
+    },
+    // ── Offene Servicetermine (noch ausstehend) ───────────────────────────────
+    {
+      id: "44444444-4444-4444-8444-444444444401",
+      vehicle_id: vehicles[0].id,
+      user_id: freeUserId,
+      title: "TUEV erneuern",
+      reminder_type: "date",
+      due_date: "2026-08-15",
+      is_completed: false,
+      notes: "HU/AU Termin buchen",
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444402",
+      vehicle_id: vehicles[0].id,
+      user_id: freeUserId,
+      title: "Winterreifen aufziehen",
+      reminder_type: "date",
+      due_date: "2026-10-15",
+      is_completed: false,
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444411",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      title: "Inspektion 70k",
+      reminder_type: "mileage",
+      due_mileage: 70000,
+      is_completed: false,
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444412",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      title: "TUEV BMW",
+      reminder_type: "date",
+      due_date: "2026-06-30",
+      is_completed: false,
+    },
+    {
+      id: "44444444-4444-4444-8444-444444444421",
+      vehicle_id: vehicles[2].id,
+      user_id: proUserId,
+      title: "Bremsfluessigkeit check",
+      reminder_type: "both",
+      due_date: "2026-11-01",
+      due_mileage: 32000,
+      is_completed: false,
+    },
+  ];
+
+  const { error: upsertRemindersError } = await supabase
+    .from("reminders")
+    .upsert(reminders, { onConflict: "id" });
+
+  if (upsertRemindersError) {
+    throw upsertRemindersError;
+  }
+
+  // ── Laufende Kostenbuchungen (Schleife) ─────────────────────────────────────
   const costEntries: Array<{
     id: string;
     vehicle_id: string;
@@ -437,6 +560,8 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
     liters?: number;
     price_per_liter?: number;
     notes?: string;
+    payment_status?: string;
+    reminder_id?: string;
   }> = [];
 
   const formatDate = (date: Date, day: number): string => {
@@ -662,6 +787,51 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
     }
   }
 
+  // Set payment_status: entries older than 60 days = 'paid', recent = 'open'
+  const sixtyDaysAgo = new Date();
+  sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+  const sixtyDaysAgoStr = sixtyDaysAgo.toISOString().slice(0, 10);
+
+  for (const entry of costEntries) {
+    entry.payment_status = entry.date <= sixtyDaysAgoStr ? "paid" : "open";
+  }
+
+  // ── Monatliche Finanzierungs- und Leasingraten ────────────────────────────
+  // BMW 320d → Finanzierung (finance-Typ), Tesla → Leasing (lease-Typ),
+  // Mercedes C 200 → Finanzierung (finance-Typ, inzwischen verkauft)
+  const financingConfigs = [
+    { vehicle: vehicles[1], userId: proUserId, label: "Finanzierung", category: "financing", months: 48, startDate: "2022-03-01", amount: 399 },
+    { vehicle: vehicles[2], userId: proUserId, label: "Leasing", category: "leasing", months: 36, startDate: "2024-09-01", amount: 489 },
+    { vehicle: vehicles[4], userId: proUserId, label: "Finanzierung", category: "financing", months: 48, startDate: "2019-02-01", amount: 349 },
+  ];
+
+  const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  for (const config of financingConfigs) {
+    const startDate = new Date(config.startDate + "T00:00:00");
+
+    for (let i = 0; i < config.months; i++) {
+      const entryDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+      const mm = String(entryDate.getMonth() + 1).padStart(2, "0");
+      const yyyy = entryDate.getFullYear();
+      const dateStr = `${yyyy}-${mm}-01`;
+      const isPast = entryDate < currentMonth;
+
+      costEntries.push({
+        id: makeCostId(sequence),
+        vehicle_id: config.vehicle.id,
+        user_id: config.userId,
+        category: config.category,
+        title: `Monatsrate ${config.label} ${mm}/${yyyy}`,
+        amount: config.amount,
+        date: dateStr,
+        notes: "Automatisch generierte Finanzierungsrate",
+        payment_status: isPast ? "paid" : "open",
+      });
+      sequence += 1;
+    }
+  }
+
   const { error: upsertCostsError } = await supabase
     .from("cost_entries")
     .upsert(costEntries, { onConflict: "id" });
@@ -670,7 +840,85 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
     throw upsertCostsError;
   }
 
-  // Sale entries for sold vehicles
+  // ── An Servicetermine geknüpfte Kostenbuchungen ──────────────────────────
+  // Diese Einträge referenzieren abgeschlossene Servicetermine via reminder_id.
+  const linkedCostEntries = [
+    {
+      id: "33333333-3333-4333-8333-b00000000001",
+      vehicle_id: vehicles[0].id,
+      user_id: freeUserId,
+      category: "maintenance",
+      title: "Inspektion + Oelwechsel 30.000 km",
+      amount: 198.50,
+      date: "2024-06-18",
+      mileage: 30100,
+      reminder_id: "44444444-4444-4444-8444-444444444403",
+      notes: "Oelwechsel, Luftfilter, Microfilter erneuert",
+      payment_status: "paid",
+    },
+    {
+      id: "33333333-3333-4333-8333-b00000000002",
+      vehicle_id: vehicles[0].id,
+      user_id: freeUserId,
+      category: "maintenance",
+      title: "Winterreifen montieren und einlagern",
+      amount: 79.00,
+      date: "2024-10-16",
+      mileage: 38500,
+      reminder_id: "44444444-4444-4444-8444-444444444404",
+      notes: "Radsatz eingelagert, Laufflaeche 6mm",
+      payment_status: "paid",
+    },
+    {
+      id: "33333333-3333-4333-8333-b00000000003",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      category: "maintenance",
+      title: "Grosse Inspektion 60k inkl. Zahnriemen",
+      amount: 587.30,
+      date: "2024-02-20",
+      mileage: 60200,
+      reminder_id: "44444444-4444-4444-8444-444444444413",
+      notes: "Zahnriemen, Wasserpumpe, Thermostat, Inspektion 60k nach BMW-Wartungsplan",
+      payment_status: "paid",
+    },
+    {
+      id: "33333333-3333-4333-8333-b00000000004",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      category: "repair",
+      title: "Bremsen VA – Scheiben und Belaege",
+      amount: 342.80,
+      date: "2023-09-12",
+      mileage: 55100,
+      reminder_id: "44444444-4444-4444-8444-444444444414",
+      notes: "ATE Bremsscheiben 300mm, TRW Belaege Vorderachse",
+      payment_status: "paid",
+    },
+    {
+      id: "33333333-3333-4333-8333-b00000000005",
+      vehicle_id: vehicles[2].id,
+      user_id: proUserId,
+      category: "maintenance",
+      title: "HU/AU Hauptuntersuchung (DEKRA)",
+      amount: 119.00,
+      date: "2026-01-15",
+      mileage: 26400,
+      reminder_id: "44444444-4444-4444-8444-444444444422",
+      notes: "HU bestanden ohne Maengel, Plakette gueltig bis 03/2028",
+      payment_status: "paid",
+    },
+  ];
+
+  const { error: upsertLinkedCostsError } = await supabase
+    .from("cost_entries")
+    .upsert(linkedCostEntries, { onConflict: "id" });
+
+  if (upsertLinkedCostsError) {
+    throw upsertLinkedCostsError;
+  }
+
+  // ── Verkaufseinträge ──────────────────────────────────────────────────────
   const saleCostEntries = [
     {
       id: "33333333-3333-4333-8333-a00000000001",
@@ -682,6 +930,7 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
       is_vehicle_sale: true,
       date: "2025-11-15",
       notes: "Verkauf an Privatperson über mobile.de",
+      payment_status: "paid",
     },
     {
       id: "33333333-3333-4333-8333-a00000000002",
@@ -693,6 +942,7 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
       is_vehicle_sale: true,
       date: "2026-01-20",
       notes: "Inzahlungnahme beim Händler",
+      payment_status: "paid",
     },
   ];
 
@@ -714,6 +964,90 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
     if (linkError) {
       throw linkError;
     }
+  }
+
+  // ── Anschaffungskosten ────────────────────────────────────────────────────
+  const acquisitionCostEntries = [
+    // VW Golf – Kauf
+    {
+      id: "33333333-3333-4333-8333-c00000000001",
+      vehicle_id: vehicles[0].id,
+      user_id: freeUserId,
+      category: "acquisition",
+      title: "Kaufpreis VW Golf",
+      amount: 17200,
+      date: "2023-05-16",
+      payment_status: "paid",
+      notes: "Barankauf",
+    },
+    // BMW 320d – Anzahlung Finanzierung
+    {
+      id: "33333333-3333-4333-8333-c00000000002",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      category: "acquisition",
+      title: "Anzahlung Finanzierung BMW 320d",
+      amount: 5000,
+      date: "2022-03-01",
+      payment_status: "paid",
+      notes: "Anzahlung Ballonfinanzierung",
+    },
+    // BMW 320d – Schlussrate (2022-03 + 48 Monate = 2026-03-01, bereits fällig)
+    {
+      id: "33333333-3333-4333-8333-c00000000003",
+      vehicle_id: vehicles[1].id,
+      user_id: proUserId,
+      category: "acquisition",
+      title: "Schlussrate Finanzierung BMW 320d",
+      amount: 8500,
+      date: "2026-03-01",
+      payment_status: "paid",
+      notes: "Ballonrate nach 48 Monaten",
+    },
+    // Tesla Model 3 – Anzahlung Leasing
+    {
+      id: "33333333-3333-4333-8333-c00000000004",
+      vehicle_id: vehicles[2].id,
+      user_id: proUserId,
+      category: "acquisition",
+      title: "Anzahlung Leasing Tesla Model 3",
+      amount: 3000,
+      date: "2024-09-01",
+      payment_status: "paid",
+      notes: "Sonderzahlung Kilometerleasing",
+    },
+    // Audi A4 Avant – Kauf (verkauft)
+    {
+      id: "33333333-3333-4333-8333-c00000000005",
+      vehicle_id: vehicles[3].id,
+      user_id: proUserId,
+      category: "acquisition",
+      title: "Kaufpreis Audi A4 Avant",
+      amount: 24500,
+      date: "2020-06-10",
+      payment_status: "paid",
+      notes: "Haendlerkauf",
+    },
+    // Mercedes-Benz C 200 – Anzahlung Finanzierung (verkauft)
+    {
+      id: "33333333-3333-4333-8333-c00000000006",
+      vehicle_id: vehicles[4].id,
+      user_id: proUserId,
+      category: "acquisition",
+      title: "Anzahlung Finanzierung Mercedes-Benz C 200",
+      amount: 4000,
+      date: "2019-02-01",
+      payment_status: "paid",
+      notes: "Anzahlung classic loan",
+    },
+  ];
+
+  const { error: upsertAcquisitionEntriesError } = await supabase
+    .from("cost_entries")
+    .upsert(acquisitionCostEntries, { onConflict: "id" });
+
+  if (upsertAcquisitionEntriesError) {
+    throw upsertAcquisitionEntriesError;
   }
 
   const makeCommentId = (index: number): string =>
@@ -930,57 +1264,89 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
     throw upsertVehicleImagesError;
   }
 
-  const reminders = [
+  // ── Fahrzeugpapiere ───────────────────────────────────────────────────────
+  const docBuffer = Buffer.from(
+    "Seed Fahrzeugdokument fuer Testzwecke.\n",
+    "utf-8",
+  );
+
+  const vehicleDocuments = [
     {
-      id: "44444444-4444-4444-8444-444444444401",
+      id: "99999999-9999-4999-8999-000000000001",
       vehicle_id: vehicles[0].id,
       user_id: freeUserId,
-      title: "TUEV erneuern",
-      reminder_type: "date",
-      due_date: "2026-08-15",
-      notes: "HU/AU Termin buchen",
+      storage_path: `${freeUserId}/${vehicles[0].id}/seed-zulassung-golf.pdf`,
+      file_name: "Zulassungsbescheinigung-Golf.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: docBuffer.length,
+      document_type: "registration",
+      caption: "Zulassungsbescheinigung Teil I",
     },
     {
-      id: "44444444-4444-4444-8444-444444444402",
-      vehicle_id: vehicles[0].id,
-      user_id: freeUserId,
-      title: "Winterreifen aufziehen",
-      reminder_type: "date",
-      due_date: "2026-10-15",
-    },
-    {
-      id: "44444444-4444-4444-8444-444444444411",
+      id: "99999999-9999-4999-8999-000000000002",
       vehicle_id: vehicles[1].id,
       user_id: proUserId,
-      title: "Inspektion 70k",
-      reminder_type: "mileage",
-      due_mileage: 70000,
+      storage_path: `${proUserId}/${vehicles[1].id}/seed-zulassung-bmw.pdf`,
+      file_name: "Zulassungsbescheinigung-BMW.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: docBuffer.length,
+      document_type: "registration",
+      caption: "Zulassungsbescheinigung Teil I",
     },
     {
-      id: "44444444-4444-4444-8444-444444444412",
+      id: "99999999-9999-4999-8999-000000000003",
       vehicle_id: vehicles[1].id,
       user_id: proUserId,
-      title: "TUEV BMW",
-      reminder_type: "date",
-      due_date: "2026-06-30",
+      storage_path: `${proUserId}/${vehicles[1].id}/seed-versicherung-bmw.pdf`,
+      file_name: "Versicherungspolice-BMW.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: docBuffer.length,
+      document_type: "insurance",
+      caption: "Haftpflicht + Teilkasko 2026",
     },
     {
-      id: "44444444-4444-4444-8444-444444444421",
+      id: "99999999-9999-4999-8999-000000000004",
       vehicle_id: vehicles[2].id,
       user_id: proUserId,
-      title: "Bremsfluessigkeit check",
-      reminder_type: "both",
-      due_date: "2026-11-01",
-      due_mileage: 32000,
+      storage_path: `${proUserId}/${vehicles[2].id}/seed-zulassung-tesla.pdf`,
+      file_name: "Zulassungsbescheinigung-Tesla.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: docBuffer.length,
+      document_type: "registration",
+      caption: "Zulassungsbescheinigung Teil I und II",
+    },
+    {
+      id: "99999999-9999-4999-8999-000000000005",
+      vehicle_id: vehicles[2].id,
+      user_id: proUserId,
+      storage_path: `${proUserId}/${vehicles[2].id}/seed-tuev-tesla.pdf`,
+      file_name: "TUEV-Bericht-Tesla.pdf",
+      mime_type: "application/pdf",
+      file_size_bytes: docBuffer.length,
+      document_type: "inspection",
+      caption: "HU/AU bestanden 03/2026",
     },
   ];
 
-  const { error: upsertRemindersError } = await supabase
-    .from("reminders")
-    .upsert(reminders, { onConflict: "id" });
+  for (const doc of vehicleDocuments) {
+    const { error: uploadDocError } = await supabase.storage
+      .from(VEHICLE_DOCUMENT_BUCKET)
+      .upload(doc.storage_path, docBuffer, {
+        contentType: doc.mime_type,
+        upsert: true,
+      });
 
-  if (upsertRemindersError) {
-    throw upsertRemindersError;
+    if (uploadDocError) {
+      throw uploadDocError;
+    }
+  }
+
+  const { error: upsertVehicleDocsError } = await supabase
+    .from("vehicle_documents")
+    .upsert(vehicleDocuments, { onConflict: "id" });
+
+  if (upsertVehicleDocsError) {
+    throw upsertVehicleDocsError;
   }
 }
 

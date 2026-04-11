@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency, formatDate } from "@/lib/utils";
 import type { CostEntry, Reminder, Vehicle } from "@/types/domain";
-import { submitLinkReminderToCost, updateReminder } from "../actions";
+import { submitLinkReminderToCost, unlinkCostFromReminder, updateReminder } from "../actions";
 import { NewReminderForm } from "../new/NewReminderForm";
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -176,6 +176,16 @@ export default async function ReminderDetailPage(props: {
                   <Link href={`/costs/${costEntry.id}`} className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5">
                     Öffnen
                   </Link>
+                  <form action={unlinkCostFromReminder}>
+                    <input type="hidden" name="cost_entry_id" value={costEntry.id} />
+                    <input type="hidden" name="reminder_id" value={currentReminder.id} />
+                    <button
+                      type="submit"
+                      className="rounded-lg border border-danger/40 bg-danger/5 px-3 py-1.5 text-xs font-medium text-danger hover:bg-danger/10"
+                    >
+                      Verknüpfung aufheben
+                    </button>
+                  </form>
                 </div>
               </li>
             ))}

@@ -5,12 +5,14 @@ import { createCostEntry } from "./actions";
 import type { Vehicle, CostCategory } from "@/types/domain";
 
 const CATEGORY_OPTIONS: { value: CostCategory; label: string }[] = [
+  { value: "acquisition", label: "Anschaffung" },
   { value: "fuel", label: "Tanken" },
   { value: "maintenance", label: "Wartung" },
   { value: "repair", label: "Reparatur" },
   { value: "insurance", label: "Versicherung" },
   { value: "tax", label: "Steuer" },
   { value: "leasing", label: "Leasing" },
+  { value: "financing", label: "Finanzierung" },
   { value: "parking", label: "Parken" },
   { value: "other", label: "Sonstiges" },
 ];

@@ -23,17 +23,21 @@ const COST_CATEGORY_LABELS: Record<string, string> = {
   insurance: "Versicherung",
   tax: "Steuer",
   leasing: "Leasing",
+  financing: "Finanzierung",
   parking: "Parken",
   other: "Sonstiges",
+  acquisition: "Anschaffung",
 };
 
 const COST_CATEGORY_ORDER = [
+  "acquisition",
   "fuel",
   "maintenance",
   "repair",
   "insurance",
   "tax",
   "leasing",
+  "financing",
   "parking",
   "other",
 ] as const;
@@ -58,7 +62,7 @@ export default async function VehiclesPage(props: {
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
       supabase.from("profiles").select("*").eq("id", user.id).single(),
-      supabase.from("cost_entries").select("vehicle_id, category, amount, is_vehicle_sale").eq("user_id", user.id),
+      supabase.from("cost_entries").select("vehicle_id, category, amount, is_vehicle_sale, payment_status").eq("user_id", user.id),
       supabase
         .from("vehicle_images")
         .select("*")
@@ -68,7 +72,7 @@ export default async function VehiclesPage(props: {
 
   const allVehicles = (vehicles ?? []) as Vehicle[];
   const userProfile = profile as UserProfile | null;
-  const allCosts = (costs ?? []) as Array<{ vehicle_id: string; category: string; amount: number; is_vehicle_sale: boolean }>;
+  const allCosts = (costs ?? []) as Array<{ vehicle_id: string; category: string; amount: number; is_vehicle_sale: boolean; payment_status: string }>;
   const imageRecords = (primaryImages ?? []) as VehicleImage[];
   const tier = userProfile?.subscription_tier ?? "free";
   const canAdd = canAddVehicle(tier, allVehicles.length);
@@ -91,20 +95,20 @@ export default async function VehiclesPage(props: {
   };
 
   const vehicleRunningCostMap = allCosts.reduce<Record<string, number>>((acc, entry) => {
-    if (entry.is_vehicle_sale) return acc;
+    if (entry.is_vehicle_sale || entry.payment_status !== "paid") return acc;
     acc[entry.vehicle_id] = (acc[entry.vehicle_id] ?? 0) + entry.amount;
     return acc;
   }, {});
 
   const vehicleSaleMap = allCosts.reduce<Record<string, number>>((acc, entry) => {
-    if (!entry.is_vehicle_sale) return acc;
+    if (!entry.is_vehicle_sale || entry.payment_status !== "paid") return acc;
     acc[entry.vehicle_id] = (acc[entry.vehicle_id] ?? 0) + entry.amount;
     return acc;
   }, {});
 
   const categoryBreakdownByVehicle = allCosts.reduce<Record<string, Record<string, number>>>(
     (acc, entry) => {
-      if (entry.is_vehicle_sale) return acc;
+      if (entry.is_vehicle_sale || entry.payment_status !== "paid") return acc;
       const vehicleCategories = acc[entry.vehicle_id] ?? {};
       vehicleCategories[entry.category] = (vehicleCategories[entry.category] ?? 0) + entry.amount;
       acc[entry.vehicle_id] = vehicleCategories;

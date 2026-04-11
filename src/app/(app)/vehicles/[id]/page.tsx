@@ -1,7 +1,8 @@
 ﻿import Link from "next/link";
 import { redirect } from "next/navigation";
-import { ArrowLeftIcon, PhotoIcon } from "@/components/Icons";
+import { ArrowLeftIcon, ExpandIcon, PhotoIcon } from "@/components/Icons";
 import { CostLinesChart } from "@/components/CostLinesChart";
+import { CostCumulativeExplorer } from "@/components/CostCumulativeExplorer";
 import {
   buildTrendRows,
   getCostDateBounds,
@@ -25,15 +26,17 @@ import type {
   CostCategory,
   CostEntry,
   Reminder,
-  UserProfile,
   Vehicle,
   VehicleComment,
+  VehicleDocument,
   VehicleImage,
 } from "@/types/domain";
-import { ExportForm } from "@/app/(app)/export/ExportForm";
 import { VehicleCommentForm } from "./VehicleCommentForm";
+import { VehicleCostFilter } from "./VehicleCostFilter";
+import { VehicleExportButton } from "./VehicleExportButton";
+import { VehicleDocumentUploadForm } from "./VehicleDocumentUploadForm";
 import { VehicleImageUploadForm } from "./VehicleImageUploadForm";
-import { VehicleStandardCostPlanner } from "./VehicleStandardCostPlanner";
+import { VehicleStandardCostPlannerModal } from "./VehicleStandardCostPlannerModal";
 import { VehicleActions } from "./VehicleActions";
 import { setPrimaryVehicleImage } from "./actions";
 
@@ -44,7 +47,16 @@ const CATEGORY_LABELS: Record<CostCategory, string> = {
   insurance: "Versicherung",
   tax: "Steuer",
   leasing: "Leasing",
+  financing: "Finanzierung",
   parking: "Parken",
+  other: "Sonstiges",
+  acquisition: "Anschaffung",
+};
+
+const DOCUMENT_TYPE_LABELS: Record<string, string> = {
+  registration: "Zulassungsbescheinigung",
+  insurance: "Versicherungspolice",
+  inspection: "TÜV-Bericht",
   other: "Sonstiges",
 };
 
@@ -133,7 +145,7 @@ export default async function VehicleDetailPage(props: {
 
   const v = vehicle as Vehicle;
 
-  const [{ data: costs }, { data: reminders }, { data: comments }, { data: images }, { data: profile }] =
+  const [{ data: costs }, { data: reminders }, { data: comments }, { data: images }, { data: documents }] =
     await Promise.all([
       supabase
         .from("cost_entries")
@@ -157,14 +169,18 @@ export default async function VehicleDetailPage(props: {
         .eq("vehicle_id", id)
         .eq("user_id", user.id)
         .order("created_at", { ascending: false }),
-      supabase.from("profiles").select("subscription_tier").eq("id", user.id).single(),
+      supabase
+        .from("vehicle_documents")
+        .select("*")
+        .eq("vehicle_id", id)
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false }),
     ]);
 
   const vehicleCosts = (costs ?? []) as CostEntry[];
   const recentCosts = vehicleCosts.slice(0, 10);
   const allReminders = (reminders ?? []) as Reminder[];
   const vehicleComments = (comments ?? []) as VehicleComment[];
-  const userProfile = profile as Pick<UserProfile, "subscription_tier"> | null;
   const vehicleImages = ((images ?? []) as VehicleImage[]).sort((left, right) => {
     if (left.is_primary !== right.is_primary) {
       return left.is_primary ? -1 : 1;
@@ -186,18 +202,39 @@ export default async function VehicleDetailPage(props: {
     }),
   );
 
+  const vehicleDocuments = (documents ?? []) as VehicleDocument[];
+
+  const documentLinks = await Promise.all(
+    vehicleDocuments.map(async (doc) => {
+      const { data } = await supabase.storage
+        .from("vehicle-documents")
+        .createSignedUrl(doc.storage_path, 60 * 30);
+
+      return {
+        doc,
+        signedUrl: data?.signedUrl ?? null,
+      };
+    }),
+  );
+
   const primaryImage =
     imageLinks.find((entry) => entry.image.is_primary) ?? imageLinks[0] ?? null;
 
-  const totalRunningCosts = vehicleCosts.reduce(
-    (sum, entry) => sum + entry.amount,
-    0,
-  );
+  const totalRunningCosts = vehicleCosts
+    .filter(
+      (entry) =>
+        entry.payment_status === "paid" &&
+        !entry.is_vehicle_sale &&
+        entry.category !== "acquisition",
+    )
+    .reduce((sum, entry) => sum + entry.amount, 0);
   const saleEntry = vehicleCosts.find((entry) => entry.id === v.sale_cost_entry_id) ?? null;
+  const saleRevenue = vehicleCosts
+    .filter((entry) => entry.payment_status === "paid" && entry.is_vehicle_sale)
+    .reduce((sum, entry) => sum + Math.abs(entry.amount), 0);
   const acquisitionCost = calculateAcquisitionCost(v);
-  const totalOwnershipCosts = totalRunningCosts + acquisitionCost;
+  const totalOwnershipCosts = totalRunningCosts + acquisitionCost - saleRevenue;
   const isSold = v.status === VEHICLE_STATUS.sold;
-  const canExportVehicle = userProfile?.subscription_tier === "pro";
 
   const fuelLabels: Record<string, string> = {
     petrol: "Benzin",
@@ -208,22 +245,25 @@ export default async function VehicleDetailPage(props: {
     cng: "CNG",
   };
 
-  const trendBounds = getCostDateBounds(vehicleCosts);
+  const paidCosts = vehicleCosts.filter((entry) => entry.payment_status === "paid");
+  const trendBounds = getCostDateBounds(paidCosts);
   const trendMonths = trendBounds
     ? monthRange(trendBounds.startMonth, trendBounds.endMonth)
     : [];
-  const monthlyTrend = buildTrendRows(vehicleCosts, trendMonths);
+  const monthlyTrend = buildTrendRows(paidCosts, trendMonths);
   const last12Months = monthlyTrend.slice(-12);
   const total12Months = last12Months.reduce((sum, item) => sum + item.total, 0);
   const average12Months = total12Months / Math.max(last12Months.length, 1);
 
   const categoryTotals12Months: Record<CostCategory, number> = {
+    acquisition: 0,
     fuel: 0,
     maintenance: 0,
     repair: 0,
     insurance: 0,
     tax: 0,
     leasing: 0,
+    financing: 0,
     parking: 0,
     other: 0,
   };
@@ -238,10 +278,6 @@ export default async function VehicleDetailPage(props: {
     .map((category) => ({ category, value: categoryTotals12Months[category] }))
     .filter((row) => row.value > 0)
     .sort((left, right) => right.value - left.value);
-
-  const linkedReminderCount = vehicleCosts.filter(
-    (entry) => entry.reminder_id,
-  ).length;
 
   const headerMeta = [
     `${v.year}`,
@@ -354,6 +390,9 @@ export default async function VehicleDetailPage(props: {
                   </Link>
                 </>
               ) : null}
+              {!isSold ? (
+                <VehicleStandardCostPlannerModal vehicleId={v.id} fuelType={v.fuel_type} />
+              ) : null}
               <Link
                 href="?tab=media"
                 className="rounded-xl border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-foreground/5"
@@ -368,10 +407,10 @@ export default async function VehicleDetailPage(props: {
       <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">
-            {isSold ? "Saldo Fahrzeug" : "Betriebskosten"}
+            Betriebskosten Fahrzeug
           </p>
           <p className="mt-2 text-sm text-muted">
-            {isSold ? "Kosten inklusive Verkaufserlös" : "Alle Kostenbuchungen für dieses Fahrzeug"}
+            Alle bezahlten Buchungen ohne Anschaffung und Verkauf
           </p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
             {formatCurrency(totalRunningCosts, locale)}
@@ -395,20 +434,20 @@ export default async function VehicleDetailPage(props: {
           <p className="text-xs uppercase tracking-[0.15em] text-muted">
             Gesamtaufwand
           </p>
-          <p className="mt-2 text-sm text-muted">Betriebskosten plus Anschaffungskosten</p>
+          <p className="mt-2 text-sm text-muted">Betriebskosten + Anschaffung − Erlöse</p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
             {formatCurrency(totalOwnershipCosts, locale)}
           </p>
         </div>
         <div className="surface rounded-2xl p-4">
           <p className="text-xs uppercase tracking-[0.15em] text-muted">
-            Serviceterminkosten
+            Verkaufserlöse
           </p>
           <p className="mt-2 text-sm text-muted">
-            Kosten mit verknüpftem Servicetermin
+            Erlöse aus dem Fahrzeugverkauf
           </p>
           <p className="mt-1 text-2xl font-semibold text-foreground">
-            {linkedReminderCount}
+            {saleRevenue > 0 ? formatCurrency(saleRevenue, locale) : "–"}
           </p>
         </div>
       </section>
@@ -524,10 +563,37 @@ export default async function VehicleDetailPage(props: {
 
             {monthlyTrend.length > 0 ? (
               <div>
-                <h3 className="mb-2 text-sm font-semibold text-foreground">
-                  Kostenverlauf mit Durchschnitt
-                </h3>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Kostenverlauf mit Durchschnitt
+                  </h3>
+                  <Link
+                    href={`/vehicles/${v.id}/cost-trend`}
+                    className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                    aria-label="Kostenverlauf vergrößern"
+                  >
+                    <ExpandIcon className="h-4 w-4" />
+                  </Link>
+                </div>
                 <CostLinesChart data={monthlyTrend} locale={locale} />
+              </div>
+            ) : null}
+
+            {vehicleCosts.length > 0 ? (
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-3">
+                  <h3 className="text-sm font-semibold text-foreground">
+                    Kumulierter Kostenverlauf
+                  </h3>
+                  <Link
+                    href={`/vehicles/${v.id}/cumulative-trend`}
+                    className="rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                    aria-label="Kumulierten Kostenverlauf vergrößern"
+                  >
+                    <ExpandIcon className="h-4 w-4" />
+                  </Link>
+                </div>
+                <CostCumulativeExplorer costs={vehicleCosts} locale={locale} expanded={false} />
               </div>
             ) : null}
           </section>
@@ -623,74 +689,14 @@ export default async function VehicleDetailPage(props: {
 
       {activeTab === "costs" ? (
         <>
-          {!isSold ? <VehicleStandardCostPlanner vehicleId={v.id} fuelType={v.fuel_type} /> : null}
-
           <section className="section-shell space-y-3 p-5 sm:p-6">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">
-                  Kostenhistorie
-                </h2>
-                <p className="mt-1 text-sm text-muted">
-                  Exportiere die Kosten dieses Fahrzeugs gezielt nach Kategorien oder Zeitraum.
-                </p>
-              </div>
-              {canExportVehicle ? (
-                <div className="w-full max-w-md">
-                  <ExportForm
-                    vehicles={[{ id: v.id, make: v.make, model: v.model, status: v.status }]}
-                    fixedVehicle={{ id: v.id, make: v.make, model: v.model, status: v.status }}
-                  />
-                </div>
-              ) : (
-                <div className="rounded-xl border border-amber-300/50 bg-amber-100/65 px-3 py-2 text-sm text-amber-800">
-                  CSV-Export für einzelne Fahrzeuge ist im Pro-Tarif verfügbar.
-                </div>
-              )}
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold text-foreground">
+                Kostenhistorie
+              </h2>
+              <VehicleExportButton vehicle={{ id: v.id, make: v.make, model: v.model, status: v.status }} />
             </div>
-            {recentCosts.length === 0 ? (
-              <p className="text-sm text-muted">Keine Einträge vorhanden.</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b border-border text-left">
-                      <th className="pb-2 pr-4 font-medium text-muted">Datum</th>
-                      <th className="pb-2 pr-4 font-medium text-muted">Kategorie</th>
-                      <th className="pb-2 pr-4 font-medium text-muted">Titel</th>
-                      <th className="pb-2 pr-4 font-medium text-muted">Servicetermin</th>
-                      <th className="pb-2 text-right font-medium text-muted">Betrag</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentCosts.map((costEntry) => (
-                      <tr key={costEntry.id} className="border-b border-border/60">
-                        <td className="py-2 pr-4">
-                          {formatDate(costEntry.date, locale)}
-                        </td>
-                        <td className="py-2 pr-4">
-                          {costEntry.is_vehicle_sale ? "Fahrzeugverkauf" : CATEGORY_LABELS[costEntry.category]}
-                        </td>
-                        <td className="py-2 pr-4">
-                          <Link
-                            href={`/costs/${costEntry.id}`}
-                            className="font-medium text-brand hover:underline"
-                          >
-                            {costEntry.title}
-                          </Link>
-                        </td>
-                        <td className="py-2 pr-4 text-xs text-muted">
-                          {costEntry.reminder_id ? "Verknüpft" : "-"}
-                        </td>
-                        <td className="py-2 text-right">
-                          {formatCurrency(costEntry.amount, locale)}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
+            <VehicleCostFilter allCosts={vehicleCosts} locale={locale} />
           </section>
         </>
       ) : null}
@@ -1014,6 +1020,53 @@ export default async function VehicleDetailPage(props: {
                 ) : null}
               </div>
             ) : null}
+          </section>
+
+          <section className="section-shell space-y-4 p-5 sm:p-6">
+            <h2 className="text-lg font-semibold text-foreground">
+              Fahrzeugpapiere
+            </h2>
+            <p className="text-sm text-muted">
+              Lade hier Fahrzeugdokumente wie Zulassungsbescheinigung, Versicherungspolice oder TÜV-Berichte hoch.
+            </p>
+
+            <VehicleDocumentUploadForm vehicleId={v.id} />
+
+            {documentLinks.length === 0 ? (
+              <p className="text-sm text-muted">Noch keine Dokumente hochgeladen.</p>
+            ) : (
+              <div className="space-y-2">
+                {documentLinks.map(({ doc, signedUrl }) => (
+                  <article
+                    key={doc.id}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-border/70 bg-card/60 p-3"
+                  >
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-medium text-foreground">
+                        {doc.file_name}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {DOCUMENT_TYPE_LABELS[doc.document_type] ?? doc.document_type}
+                        {doc.caption ? ` · ${doc.caption}` : ""}
+                        {` · ${(doc.file_size_bytes / 1024).toFixed(0)} KB`}
+                      </p>
+                    </div>
+                    {signedUrl ? (
+                      <a
+                        href={signedUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                      >
+                        Öffnen
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted">Nicht verfügbar</span>
+                    )}
+                  </article>
+                ))}
+              </div>
+            )}
           </section>
         </>
       ) : null}

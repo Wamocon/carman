@@ -804,3 +804,70 @@ export async function setPrimaryVehicleImage(vehicleId: string, imageId: string)
   revalidatePath("/vehicles");
   revalidatePath("/dashboard");
 }
+
+export async function createVehicleDocumentRecord(formData: FormData) {
+  const vehicleId = (formData.get("vehicle_id") as string) ?? "";
+  const storagePath = (formData.get("storage_path") as string) ?? "";
+  const fileName = (formData.get("file_name") as string) ?? "";
+  const mimeType = (formData.get("mime_type") as string) ?? "";
+  const fileSizeRaw = (formData.get("file_size_bytes") as string) ?? "";
+  const documentType = ((formData.get("document_type") as string) ?? "registration").trim();
+  const caption = ((formData.get("caption") as string) ?? "").trim() || null;
+
+  if (!vehicleId || !storagePath || !fileName || !mimeType || !fileSizeRaw) {
+    return { error: "Unvollständige Dokumentdaten." };
+  }
+
+  const fileSizeBytes = Number.parseInt(fileSizeRaw, 10);
+  if (Number.isNaN(fileSizeBytes) || fileSizeBytes <= 0) {
+    return { error: "Ungültige Dateigröße." };
+  }
+
+  const validDocTypes = new Set(["registration", "insurance", "inspection", "other"]);
+  if (!validDocTypes.has(documentType)) {
+    return { error: "Ungültiger Dokumenttyp." };
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Nicht angemeldet." };
+  }
+
+  const expectedPrefix = `${user.id}/${vehicleId}/`;
+  if (!storagePath.startsWith(expectedPrefix)) {
+    return { error: "Ungültiger Speicherpfad." };
+  }
+
+  const { data: vehicle, error: vehicleError } = await supabase
+    .from("vehicles")
+    .select("id")
+    .eq("id", vehicleId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (vehicleError || !vehicle) {
+    return { error: "Fahrzeug nicht gefunden." };
+  }
+
+  const { error } = await supabase.from("vehicle_documents").insert({
+    vehicle_id: vehicleId,
+    user_id: user.id,
+    storage_path: storagePath,
+    file_name: fileName,
+    mime_type: mimeType,
+    file_size_bytes: fileSizeBytes,
+    document_type: documentType,
+    caption,
+  });
+
+  if (error) {
+    return { error: "Dokument konnte nicht gespeichert werden." };
+  }
+
+  revalidatePath(`/vehicles/${vehicleId}`);
+  return { error: null };
+}

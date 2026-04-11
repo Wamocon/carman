@@ -268,20 +268,122 @@ export async function createVehicle(
     current_mileage: currentMileage,
   };
 
-  let { error } = await supabase.from("vehicles").insert(insertPayload);
+  let insertResult = await supabase.from("vehicles").insert(insertPayload).select("id").single();
 
-  if (isMissingEnginePowerPsColumnError(error)) {
+  if (isMissingEnginePowerPsColumnError(insertResult.error)) {
     const { engine_power_ps: ignoredEnginePowerPs, ...fallbackPayload } = insertPayload;
     void ignoredEnginePowerPs;
-    const retry = await supabase.from("vehicles").insert(fallbackPayload);
-    error = retry.error;
+    insertResult = await supabase.from("vehicles").insert(fallbackPayload).select("id").single();
   }
 
-  if (error) {
+  if (insertResult.error || !insertResult.data) {
     return { error: "Fehler beim Speichern. Bitte versuche es erneut." };
   }
 
-  redirect("/vehicles");
+  const newVehicleId = insertResult.data.id as string;
+
+  // Generate monthly financing/leasing cost entries
+  if (
+    (acquisitionType === "finance" || acquisitionType === "lease") &&
+    monthlyPayment !== null &&
+    termMonths !== null &&
+    contractStartDate
+  ) {
+    const today = new Date();
+    const currentMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+    const financingEntries: Array<{
+      vehicle_id: string;
+      user_id: string;
+      category: string;
+      title: string;
+      amount: number;
+      date: string;
+      payment_status: string;
+      notes: string;
+    }> = [];
+
+    const typeLabel = acquisitionType === "lease" ? "Leasing" : "Finanzierung";
+    const startDate = new Date(contractStartDate + "T00:00:00");
+
+    for (let i = 0; i < termMonths; i++) {
+      const entryDate = new Date(startDate.getFullYear(), startDate.getMonth() + i, 1);
+      const mm = String(entryDate.getMonth() + 1).padStart(2, "0");
+      const yyyy = entryDate.getFullYear();
+      const dateStr = `${yyyy}-${mm}-01`;
+      const isPast = entryDate < currentMonth;
+
+      financingEntries.push({
+        vehicle_id: newVehicleId,
+        user_id: user.id,
+        category: acquisitionType === "lease" ? "leasing" : "financing",
+        title: `Monatsrate ${typeLabel} ${mm}/${yyyy}`,
+        amount: monthlyPayment,
+        date: dateStr,
+        payment_status: isPast ? "paid" : "open",
+        notes: "Automatisch generierte Finanzierungsrate",
+      });
+    }
+
+    if (financingEntries.length > 0) {
+      await supabase.from("cost_entries").insert(financingEntries);
+    }
+  }
+
+  // Insert initial acquisition cost entry (for cumulative cost trend)
+  const acquisitionDate =
+    acquisitionType === "purchase"
+      ? (purchaseDate ?? new Date().toISOString().slice(0, 10))
+      : (contractStartDate ?? new Date().toISOString().slice(0, 10));
+
+  const acquisitionAmount =
+    acquisitionType === "purchase" ? purchasePrice : (downPayment ?? null);
+
+  if (acquisitionAmount !== null && acquisitionAmount > 0) {
+    const typeLabel =
+      acquisitionType === "purchase"
+        ? "Kaufpreis"
+        : acquisitionType === "finance"
+          ? "Anzahlung Finanzierung"
+          : "Anzahlung Leasing";
+
+    await supabase.from("cost_entries").insert({
+      vehicle_id: newVehicleId,
+      user_id: user.id,
+      category: "acquisition",
+      title: `${typeLabel} ${make} ${model}`,
+      amount: acquisitionAmount,
+      date: acquisitionDate,
+      payment_status: "paid",
+      notes: "Automatisch generierter Anschaffungskosteneintrag",
+    });
+  }
+
+  // For finance type: also insert balloon payment at end of term
+  if (
+    acquisitionType === "finance" &&
+    finalPayment !== null &&
+    finalPayment > 0 &&
+    contractStartDate &&
+    termMonths !== null
+  ) {
+    const startDate = new Date(contractStartDate + "T00:00:00");
+    const balloonDate = new Date(startDate.getFullYear(), startDate.getMonth() + termMonths, 1);
+    const balloonDateStr = balloonDate.toISOString().slice(0, 10);
+    const isBalloonPast = balloonDate < new Date();
+
+    await supabase.from("cost_entries").insert({
+      vehicle_id: newVehicleId,
+      user_id: user.id,
+      category: "acquisition",
+      title: `Schlussrate Finanzierung ${make} ${model}`,
+      amount: finalPayment,
+      date: balloonDateStr,
+      payment_status: isBalloonPast ? "paid" : "open",
+      notes: "Automatisch generierte Schlussrate",
+    });
+  }
+
+  redirect(`/vehicles/${newVehicleId}?tab=details`);
 }
 
 

@@ -164,17 +164,14 @@ function parsePositiveInteger(value: string): number | null {
   return parsed;
 }
 
-function calculateAcquisitionCost(vehicle: Pick<Vehicle, "acquisition_type" | "purchase_price" | "down_payment" | "monthly_payment" | "term_months" | "final_payment">): number {
+function calculateAcquisitionCost(vehicle: Pick<Vehicle, "acquisition_type" | "purchase_price" | "down_payment" | "final_payment">): number {
   if (vehicle.acquisition_type === "purchase") {
     return vehicle.purchase_price ?? 0;
   }
 
-  const downPayment = vehicle.down_payment ?? 0;
-  const monthlyPayment = vehicle.monthly_payment ?? 0;
-  const termMonths = vehicle.term_months ?? 0;
-  const finalPayment = vehicle.final_payment ?? 0;
-
-  return downPayment + monthlyPayment * termMonths + finalPayment;
+  // For finance/lease: only the upfront cash payments (down payment + balloon/final payment).
+  // Monthly financing/leasing rates are tracked separately as cost_entries.
+  return (vehicle.down_payment ?? 0) + (vehicle.final_payment ?? 0);
 }
 
 function convertKwToPs(kw: number): number {

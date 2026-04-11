@@ -15,22 +15,26 @@ import type { CostCategory, CostEntry, Vehicle } from "@/types/domain";
 
 const CATEGORY_LABELS: Record<Locale, Record<CostCategory, string>> = {
   de: {
+    acquisition: "Anschaffung",
     fuel: "Tanken",
     maintenance: "Wartung",
     repair: "Reparatur",
     insurance: "Versicherung",
     tax: "Steuer",
     leasing: "Leasing",
+    financing: "Finanzierung",
     parking: "Parken",
     other: "Sonstiges",
   },
   en: {
+    acquisition: "Acquisition",
     fuel: "Fuel",
     maintenance: "Maintenance",
     repair: "Repair",
     insurance: "Insurance",
     tax: "Tax",
     leasing: "Leasing",
+    financing: "Financing",
     parking: "Parking",
     other: "Other",
   },
@@ -51,6 +55,8 @@ export function CostTrendExplorer({
   const [selectedCategories, setSelectedCategories] = useState<CostCategory[]>(COST_CATEGORY_ORDER);
   const [selectedVehicleIds, setSelectedVehicleIds] = useState<string[]>(vehicles.map((vehicle) => vehicle.id));
   const [manualRange, setManualRange] = useState<{ startMonth: string; endMonth: string } | null>(null);
+  const [showTotal, setShowTotal] = useState(true);
+  const [showAverage, setShowAverage] = useState(true);
 
   const filteredEntries = useMemo(() => {
     const selectedCategorySet = new Set(selectedCategories);
@@ -61,12 +67,18 @@ export function CostTrendExplorer({
     );
   }, [costs, selectedCategories, selectedVehicleIds]);
 
+  // Only paid entries drive the time axis and trend calculation
+  const paidFilteredEntries = useMemo(
+    () => filteredEntries.filter((entry) => entry.payment_status === "paid"),
+    [filteredEntries],
+  );
+
   const derivedRange = useMemo(() => {
-    return getCostDateBounds(filteredEntries) ?? {
+    return getCostDateBounds(paidFilteredEntries) ?? {
       startMonth: currentMonth,
       endMonth: currentMonth,
     };
-  }, [currentMonth, filteredEntries]);
+  }, [currentMonth, paidFilteredEntries]);
 
   const resolvedManualRange =
     manualRange &&
@@ -80,7 +92,7 @@ export function CostTrendExplorer({
   const endMonth = expanded ? resolvedManualRange.endMonth : derivedRange.endMonth;
 
   const months = useMemo(() => monthRange(startMonth, endMonth), [endMonth, startMonth]);
-  const trendData = useMemo(() => buildTrendRows(filteredEntries, months), [filteredEntries, months]);
+  const trendData = useMemo(() => buildTrendRows(paidFilteredEntries, months), [paidFilteredEntries, months]);
 
   const dynamicTotal = trendData.reduce((sum, row) => sum + row.total, 0);
   const dynamicAverage = trendData.length > 0 ? dynamicTotal / trendData.length : 0;
@@ -100,6 +112,9 @@ export function CostTrendExplorer({
         : [...prev, vehicleId],
     );
   };
+
+  const allCatsSelected = selectedCategories.length === COST_CATEGORY_ORDER.length;
+  const allVehsSelected = selectedVehicleIds.length === vehicles.length;
 
   return (
     <div className="space-y-4">
@@ -124,10 +139,38 @@ export function CostTrendExplorer({
           })}
           <button
             type="button"
-            onClick={() => setSelectedCategories(COST_CATEGORY_ORDER)}
+            onClick={() => setSelectedCategories(allCatsSelected ? [] : [...COST_CATEGORY_ORDER])}
             className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground hover:bg-foreground/5"
           >
-            {locale === "de" ? "Alle Kategorien" : "All categories"}
+            {allCatsSelected
+              ? locale === "de" ? "Keine" : "None"
+              : locale === "de" ? "Alle" : "All"}
+          </button>
+
+          <span className="h-5 w-px bg-border/60 self-center" />
+
+          <button
+            type="button"
+            onClick={() => setShowTotal((v) => !v)}
+            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+              showTotal
+                ? "border-slate-400/40 bg-slate-900/10 text-slate-900 dark:text-foreground"
+                : "border-border bg-card text-foreground/70 hover:bg-foreground/5"
+            }`}
+          >
+            {locale === "de" ? "Gesamt" : "Total"}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setShowAverage((v) => !v)}
+            className={`rounded-full border px-2.5 py-1 text-xs font-medium transition ${
+              showAverage
+                ? "border-red-400/40 bg-red-500/10 text-red-700"
+                : "border-border bg-card text-foreground/70 hover:bg-foreground/5"
+            }`}
+          >
+            {locale === "de" ? "Durchschnitt" : "Average"}
           </button>
         </div>
       </div>
@@ -184,10 +227,14 @@ export function CostTrendExplorer({
               })}
               <button
                 type="button"
-                onClick={() => setSelectedVehicleIds(vehicles.map((vehicle) => vehicle.id))}
+                onClick={() =>
+                  setSelectedVehicleIds(allVehsSelected ? [] : vehicles.map((v) => v.id))
+                }
                 className="rounded-full border border-border bg-card px-2.5 py-1 text-xs font-medium text-foreground"
               >
-                {locale === "de" ? "Alle Fahrzeuge" : "All vehicles"}
+                {allVehsSelected
+                  ? locale === "de" ? "Keine" : "None"
+                  : locale === "de" ? "Alle" : "All"}
               </button>
             </div>
           </div>
@@ -212,6 +259,8 @@ export function CostTrendExplorer({
           data={trendData}
           locale={locale}
           visibleCategories={selectedCategories}
+          showTotal={showTotal}
+          showAverage={showAverage}
           className={expanded ? "h-[28rem] w-full rounded-xl border border-border/70 bg-card/80 p-2" : undefined}
         />
       )}

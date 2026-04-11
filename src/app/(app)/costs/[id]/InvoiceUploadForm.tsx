@@ -100,18 +100,34 @@ export function InvoiceUploadForm({ costEntryId }: { costEntryId: string }) {
 
   return (
     <div className="space-y-3">
-      <div>
-        <label htmlFor="invoice_file" className="block text-sm font-medium text-foreground">
-          Rechnung hochladen
-        </label>
-        <input
-          id="invoice_file"
-          type="file"
-          accept="application/pdf,image/png,image/jpeg,image/webp"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
-        />
-        <p className="mt-1 text-xs text-muted">Erlaubte Formate: PDF, PNG, JPG, WEBP. Maximal 10 MB.</p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div>
+          <label htmlFor="invoice_file" className="block text-sm font-medium text-foreground">
+            Datei auswählen
+          </label>
+          <input
+            id="invoice_file"
+            type="file"
+            accept="application/pdf,image/png,image/jpeg,image/webp"
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+          />
+          <p className="mt-1 text-xs text-muted">PDF, PNG, JPG, WEBP. Max. 10 MB.</p>
+        </div>
+        <div>
+          <label htmlFor="invoice_camera" className="block text-sm font-medium text-foreground">
+            Foto aufnehmen
+          </label>
+          <input
+            id="invoice_camera"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            capture="environment"
+            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+            className="mt-1 block w-full rounded-xl border border-border bg-card px-3 py-2 text-sm text-foreground"
+          />
+          <p className="mt-1 text-xs text-muted">Direkt über die Kamera fotografieren.</p>
+        </div>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
