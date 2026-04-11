@@ -122,7 +122,7 @@ export default async function VehiclesPage(props: {
       const { data } = await supabase.storage
         .from("vehicle-images")
         .createSignedUrl(image.storage_path, 60 * 30);
-      return [image.vehicle_id, data?.signedUrl ?? null] as const;
+      return [image.vehicle_id, { url: data?.signedUrl ?? null, focalX: image.focal_point_x, focalY: image.focal_point_y }] as const;
     }),
   );
 
@@ -210,7 +210,8 @@ export default async function VehiclesPage(props: {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {visibleVehicles.map((v) => {
-            const primaryImageUrl = primaryImageMap[v.id] ?? undefined;
+            const primaryImageEntry = primaryImageMap[v.id] ?? undefined;
+            const primaryImageUrl = primaryImageEntry?.url;
             const categoryBreakdown = categoryBreakdownByVehicle[v.id] ?? {};
             const acquisitionCosts = calculateAcquisitionCost(v);
 
@@ -227,6 +228,7 @@ export default async function VehiclesPage(props: {
                     src={primaryImageUrl}
                     alt={`${v.make} ${v.model}`}
                     className="h-40 w-full object-cover"
+                    style={{ objectPosition: `${(primaryImageEntry?.focalX ?? 0.5) * 100}% ${(primaryImageEntry?.focalY ?? 0.5) * 100}%` }}
                   />
                 ) : (
                   <div className="flex h-40 items-center justify-center bg-foreground/5 text-muted">

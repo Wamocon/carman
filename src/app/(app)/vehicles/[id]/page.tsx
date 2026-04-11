@@ -38,6 +38,8 @@ import { VehicleDocumentUploadForm } from "./VehicleDocumentUploadForm";
 import { VehicleImageUploadForm } from "./VehicleImageUploadForm";
 import { VehicleStandardCostPlannerModal } from "./VehicleStandardCostPlannerModal";
 import { VehicleActions } from "./VehicleActions";
+import { VehicleSharingSettings } from "./VehicleSharingSettings";
+import { ImagePublicToggle, ImageDescriptionForm, DeleteImageButton } from "./ImagePublicToggle";
 import { setPrimaryVehicleImage } from "./actions";
 
 const CATEGORY_LABELS: Record<CostCategory, string> = {
@@ -65,7 +67,9 @@ const VEHICLE_TABS = [
   { key: "costs", label: "Kosten" },
   { key: "reminders", label: "Servicetermine" },
   { key: "media", label: "Medien" },
+  { key: "image-settings", label: "Bildeinrichtung" },
   { key: "details", label: "Stammdaten" },
+  { key: "sharing", label: "Freigabe" },
 ] as const;
 
 type VehicleTab = (typeof VEHICLE_TABS)[number]["key"];
@@ -791,42 +795,36 @@ export default async function VehicleDetailPage(props: {
                     key={image.id}
                     className="overflow-hidden rounded-xl border border-border/70 bg-card/60"
                   >
-                    {signedUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={signedUrl}
-                        alt={image.caption ?? image.file_name}
-                        className="h-44 w-full object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-44 items-center justify-center bg-foreground/5 text-xs text-muted">
-                        Bild nicht verfügbar
-                      </div>
-                    )}
-                    <div className="space-y-2 p-3 text-xs">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-medium text-foreground">
-                          {image.file_name}
-                        </p>
+                    <Link href={`/vehicles/${v.id}/images/${image.id}`}>
+                      {signedUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={signedUrl}
+                          alt={image.caption ?? image.file_name}
+                          className="h-44 w-full cursor-pointer object-cover transition-opacity hover:opacity-90"
+                          style={{ objectPosition: `${(image.focal_point_x ?? 0.5) * 100}% ${(image.focal_point_y ?? 0.5) * 100}%` }}
+                        />
+                      ) : (
+                        <div className="flex h-44 items-center justify-center bg-foreground/5 text-xs text-muted">
+                          Bild nicht verfügbar
+                        </div>
+                      )}
+                    </Link>
+                    <div className="space-y-1 p-3 text-xs">
+                      <p className="font-medium text-foreground">{image.file_name}</p>
+                      {image.caption ? (
+                        <p className="text-muted">{image.caption}</p>
+                      ) : null}
+                      <div className="flex items-center gap-1.5">
                         {image.is_primary ? (
                           <span className="rounded-full bg-brand/10 px-2 py-0.5 font-medium text-brand">
                             Hauptbild
                           </span>
                         ) : null}
+                        <span className={`rounded-full px-2 py-0.5 font-medium ${image.is_public ? "bg-green-500/10 text-green-700 dark:text-green-400" : "bg-foreground/8 text-muted"}`}>
+                          {image.is_public ? "Öffentlich" : "Privat"}
+                        </span>
                       </div>
-                      {image.caption ? (
-                        <p className="text-muted">{image.caption}</p>
-                      ) : null}
-                      {!image.is_primary ? (
-                        <form action={setPrimaryVehicleImage.bind(null, v.id, image.id)}>
-                          <button
-                            type="submit"
-                            className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
-                          >
-                            Als Hauptbild verwenden
-                          </button>
-                        </form>
-                      ) : null}
                     </div>
                   </article>
                 ))}
@@ -858,6 +856,85 @@ export default async function VehicleDetailPage(props: {
             )}
           </section>
         </div>
+      ) : null}
+
+      {activeTab === "image-settings" ? (
+        <section className="section-shell space-y-4 p-5 sm:p-6">
+          <h2 className="text-lg font-semibold text-foreground">Bildeinrichtung</h2>
+          <p className="text-sm text-muted">
+            Verwalte deine Bilder: Sichtbarkeit, Beschreibungen, Hauptbild und Fokuspunkt.
+          </p>
+
+          {imageLinks.length === 0 ? (
+            <p className="text-sm text-muted">Noch keine Bilder vorhanden. Lade Bilder im Medien-Reiter hoch.</p>
+          ) : (
+            <div className="space-y-4">
+              {imageLinks.map(({ image, signedUrl }) => (
+                <article
+                  key={image.id}
+                  className="overflow-hidden rounded-xl border border-border/70 bg-card/60"
+                >
+                  <div className="flex flex-col gap-4 p-4 sm:flex-row">
+                    <div className="w-full shrink-0 overflow-hidden rounded-lg sm:w-40">
+                      {signedUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={signedUrl}
+                          alt={image.caption ?? image.file_name}
+                          className="h-28 w-full object-cover sm:h-full"
+                          style={{ objectPosition: `${(image.focal_point_x ?? 0.5) * 100}% ${(image.focal_point_y ?? 0.5) * 100}%` }}
+                        />
+                      ) : (
+                        <div className="flex h-28 items-center justify-center bg-foreground/5 text-xs text-muted">
+                          Nicht verfügbar
+                        </div>
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-3 text-xs">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-medium text-foreground">{image.file_name}</p>
+                        <div className="flex items-center gap-1.5">
+                          {image.is_primary ? (
+                            <span className="rounded-full bg-brand/10 px-2 py-0.5 font-medium text-brand">
+                              Hauptbild
+                            </span>
+                          ) : null}
+                        </div>
+                      </div>
+
+                      <ImagePublicToggle imageId={image.id} isPublic={image.is_public} />
+
+                      <ImageDescriptionForm
+                        imageId={image.id}
+                        currentDescription={image.description}
+                      />
+
+                      <div className="flex flex-wrap items-center gap-2">
+                        {!image.is_primary ? (
+                          <form action={setPrimaryVehicleImage.bind(null, v.id, image.id)}>
+                            <button
+                              type="submit"
+                              className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                            >
+                              Als Hauptbild
+                            </button>
+                          </form>
+                        ) : null}
+                        <Link
+                          href={`/vehicles/${v.id}/images/${image.id}`}
+                          className="rounded-lg border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground hover:bg-foreground/5"
+                        >
+                          Fokuspunkt & Details
+                        </Link>
+                        <DeleteImageButton vehicleId={v.id} imageId={image.id} />
+                      </div>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
+        </section>
       ) : null}
 
       {activeTab === "details" ? (
@@ -1069,6 +1146,17 @@ export default async function VehicleDetailPage(props: {
             )}
           </section>
         </>
+      ) : null}
+
+      {activeTab === "sharing" ? (
+        <VehicleSharingSettings
+          vehicleId={v.id}
+          isPublished={v.is_published}
+          shareHeader={v.share_header}
+          shareDetails={v.share_details}
+          shareImages={v.share_images}
+          locale={locale}
+        />
       ) : null}
     </div>
   );

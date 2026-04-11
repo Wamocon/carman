@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   CostIcon,
   DashboardIcon,
+  GalleryIcon,
   HelpIcon,
   ReminderIcon,
   SettingsIcon,
@@ -21,6 +22,7 @@ import type { UserProfile } from "@/types/domain";
 const NAV_ITEMS = [
   { href: "/dashboard", key: "dashboard", icon: DashboardIcon },
   { href: "/vehicles", key: "vehicles", icon: VehicleIcon },
+  { href: "/gallery", key: "gallery", icon: GalleryIcon },
   { href: "/costs", key: "costs", icon: CostIcon },
   { href: "/servicetermine", key: "reminders", icon: ReminderIcon },
   { href: "/settings", key: "settings", icon: SettingsIcon },

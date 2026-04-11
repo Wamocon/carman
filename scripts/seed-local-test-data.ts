@@ -133,6 +133,18 @@ const seedUsers: SeedUser[] = [
     driverLicenseIssueDate: "2007-05-18",
     driverLicenseClass: "B",
   },
+  {
+    email: "gallery@testuser.local",
+    password: "Test1234!",
+    displayName: "Lisa Galerietest",
+    subscriptionTier: "pro",
+    driverFirstName: "Lisa",
+    driverLastName: "Galerietest",
+    driverBirthDate: "1995-07-22",
+    driverLicenseCountry: "DE",
+    driverLicenseIssueDate: "2013-09-10",
+    driverLicenseClass: "B",
+  },
 ];
 
 function requireUserId(id: string | undefined, email: string): string {
@@ -1350,11 +1362,441 @@ async function seedDomainData(freeUserId: string, proUserId: string): Promise<vo
   }
 }
 
+async function seedGalleryData(
+  freeUserId: string,
+  proUserId: string,
+  galleryUserId: string,
+): Promise<void> {
+  // ── Gallery user vehicles ────────────────────────────────────────────────
+  const galleryVehicles = [
+    {
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+      user_id: galleryUserId,
+      make: "Porsche",
+      model: "911 Carrera",
+      variant: "992 3.0 Turbo",
+      year: 2021,
+      fuel_type: "petrol",
+      body_style: "coupe",
+      transmission: "automatic",
+      drive_type: "rear",
+      doors: 2,
+      engine_power_kw: 283,
+      engine_power_ps: 385,
+      engine_displacement_cc: 2981,
+      engine_description: "3.0L Twin-Turbo Boxer-6 · Benzin",
+      special_equipment: "Navigationssystem, Apple CarPlay / Android Auto, Digitales Cockpit, Head-up-Display, Klimaautomatik, Sitzheizung vorne, Lenkradheizung, Adaptiver Tempomat (ACC), Spurhalteassistent, Einparkhilfe vorne, Einparkhilfe hinten, Rückfahrkamera, Matrix-LED-Scheinwerfer, Sportpaket, Ambientebeleuchtung, Panorama-/Schiebedach",
+      acquisition_type: "purchase",
+      acquisition_subtype: "cash",
+      purchase_price: 119500,
+      purchase_date: "2021-06-15",
+      license_plate: "S-PC 9110",
+      current_mileage: 34000,
+      status: "owned",
+      is_published: true,
+      share_header: true,
+      share_details: true,
+      share_images: true,
+    },
+    {
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaab",
+      user_id: galleryUserId,
+      make: "Volkswagen",
+      model: "Golf R",
+      variant: "Mk8 2.0 TSI 4MOTION",
+      year: 2023,
+      fuel_type: "petrol",
+      body_style: "small",
+      transmission: "automatic",
+      drive_type: "all",
+      doors: 5,
+      engine_power_kw: 245,
+      engine_power_ps: 333,
+      engine_displacement_cc: 1984,
+      engine_description: "2.0 TSI EA888 evo4 · 4-Zylinder · Benzin",
+      special_equipment: "Navigationssystem, Apple CarPlay / Android Auto, Digitales Cockpit, Klimaautomatik, Sitzheizung vorne, Lenkradheizung, Adaptiver Tempomat (ACC), Spurhalteassistent, Totwinkelassistent, Rückfahrkamera, Matrix-LED-Scheinwerfer, Sportpaket, Ambientebeleuchtung",
+      acquisition_type: "finance",
+      acquisition_subtype: "balloon",
+      down_payment: 8000,
+      monthly_payment: 549,
+      term_months: 48,
+      final_payment: 12000,
+      contract_start_date: "2023-04-01",
+      purchase_price: 52000,
+      purchase_date: "2023-04-10",
+      license_plate: "S-GR 8888",
+      current_mileage: 22000,
+      status: "owned",
+      is_published: true,
+      share_header: true,
+      share_details: true,
+      share_images: true,
+    },
+    {
+      id: "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaac",
+      user_id: galleryUserId,
+      make: "BMW",
+      model: "M2",
+      variant: "G87 Competition",
+      year: 2024,
+      fuel_type: "petrol",
+      body_style: "coupe",
+      transmission: "automatic",
+      drive_type: "rear",
+      doors: 2,
+      engine_power_kw: 338,
+      engine_power_ps: 460,
+      engine_displacement_cc: 2993,
+      engine_description: "3.0L S58 Twin-Turbo R6 · Benzin",
+      special_equipment: "Navigationssystem, Digitales Cockpit, Head-up-Display, Klimaautomatik, Sitzheizung vorne, Lenkradheizung, Adaptiver Tempomat (ACC), Spurhalteassistent, Totwinkelassistent, Einparkhilfe vorne, Einparkhilfe hinten, Rückfahrkamera, 360°-Kamera, Matrix-LED-Scheinwerfer, Sportpaket, Ambientebeleuchtung",
+      acquisition_type: "lease",
+      acquisition_subtype: "kilometerleasing",
+      down_payment: 10000,
+      monthly_payment: 899,
+      term_months: 36,
+      final_payment: 0,
+      contract_start_date: "2024-01-15",
+      purchase_price: 42364,
+      purchase_date: "2024-01-20",
+      license_plate: "S-M2 4600",
+      current_mileage: 8500,
+      status: "owned",
+      is_published: false,
+      share_header: true,
+      share_details: true,
+      share_images: true,
+    },
+  ];
+
+  // Delete gallery user's old data first
+  await supabase.from("cost_entries").delete().eq("user_id", galleryUserId);
+  await supabase.from("vehicle_documents").delete().eq("user_id", galleryUserId);
+  await supabase.from("reminders").delete().eq("user_id", galleryUserId);
+  await supabase.from("vehicles").delete().eq("user_id", galleryUserId);
+
+  const { error: upsertGalleryVehiclesError } = await supabase
+    .from("vehicles")
+    .upsert(galleryVehicles, { onConflict: "id" });
+
+  if (upsertGalleryVehiclesError) {
+    throw upsertGalleryVehiclesError;
+  }
+
+  // ── Enable sharing for all users  ────────────────────────────────────────
+  for (const userId of [freeUserId, proUserId, galleryUserId]) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ sharing_enabled: true })
+      .eq("id", userId);
+    if (error) throw error;
+  }
+
+  // ── Publish Pro user's BMW (already in DB) and set images public ─────────
+  const { error: publishBmwError } = await supabase
+    .from("vehicles")
+    .update({
+      is_published: true,
+      share_header: true,
+      share_details: true,
+      share_images: true,
+    })
+    .eq("id", "22222222-2222-4222-8222-222222222221"); // BMW 320d
+  if (publishBmwError) throw publishBmwError;
+
+  // Publish Tesla too
+  const { error: publishTeslaError } = await supabase
+    .from("vehicles")
+    .update({
+      is_published: true,
+      share_header: true,
+      share_details: true,
+      share_images: true,
+    })
+    .eq("id", "22222222-2222-4222-8222-222222222222"); // Tesla Model 3
+  if (publishTeslaError) throw publishTeslaError;
+
+  // ── Set existing images as public and primary ────────────────────────────
+  const existingImageIds = [
+    "88888888-8888-4888-8888-000000000001", // VW Golf
+    "88888888-8888-4888-8888-000000000002", // BMW 320d
+    "88888888-8888-4888-8888-000000000003", // Tesla
+  ];
+  for (const imageId of existingImageIds) {
+    await supabase
+      .from("vehicle_images")
+      .update({ is_public: true, is_primary: true })
+      .eq("id", imageId);
+  }
+
+  // ── Gallery user images ──────────────────────────────────────────────────
+  const imageBuffer = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8Xw8AAoMBgQfIYvYAAAAASUVORK5CYII=",
+    "base64",
+  );
+
+  const galleryImages = [
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb01",
+      vehicle_id: galleryVehicles[0].id,
+      user_id: galleryUserId,
+      storage_path: `${galleryUserId}/${galleryVehicles[0].id}/porsche-front.png`,
+      file_name: "porsche-911-front.png",
+      mime_type: "image/png",
+      file_size_bytes: imageBuffer.length,
+      caption: "Porsche 911 Frontansicht",
+      description: "Die ikonische Frontpartie des 992 Carrera bei Sonnenuntergang",
+      is_public: true,
+      is_primary: true,
+    },
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb02",
+      vehicle_id: galleryVehicles[0].id,
+      user_id: galleryUserId,
+      storage_path: `${galleryUserId}/${galleryVehicles[0].id}/porsche-rear.png`,
+      file_name: "porsche-911-heck.png",
+      mime_type: "image/png",
+      file_size_bytes: imageBuffer.length,
+      caption: "Porsche 911 Heckansicht",
+      description: "Heck mit Entenbuerzel und Quad-Endrohren",
+      is_public: true,
+      is_primary: false,
+    },
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb03",
+      vehicle_id: galleryVehicles[0].id,
+      user_id: galleryUserId,
+      storage_path: `${galleryUserId}/${galleryVehicles[0].id}/porsche-interior.png`,
+      file_name: "porsche-911-interior.png",
+      mime_type: "image/png",
+      file_size_bytes: imageBuffer.length,
+      caption: "Innenraum Porsche 911",
+      description: "Sportlenkrad, PDK-Schaltung und 10.9 Zoll PCM Display",
+      is_public: true,
+      is_primary: false,
+    },
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb04",
+      vehicle_id: galleryVehicles[1].id,
+      user_id: galleryUserId,
+      storage_path: `${galleryUserId}/${galleryVehicles[1].id}/golf-r-front.png`,
+      file_name: "golf-r-front.png",
+      mime_type: "image/png",
+      file_size_bytes: imageBuffer.length,
+      caption: "Golf R Frontansicht",
+      description: "Lapiz Blue Metallic mit R-Performance Paket",
+      is_public: true,
+      is_primary: true,
+    },
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb05",
+      vehicle_id: galleryVehicles[1].id,
+      user_id: galleryUserId,
+      storage_path: `${galleryUserId}/${galleryVehicles[1].id}/golf-r-side.png`,
+      file_name: "golf-r-seite.png",
+      mime_type: "image/png",
+      file_size_bytes: imageBuffer.length,
+      caption: "Golf R Seitenansicht",
+      is_public: true,
+      is_primary: false,
+    },
+    {
+      id: "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbb06",
+      vehicle_id: galleryVehicles[2].id,
+      user_id: galleryUserId,
+      storage_path: `${galleryUserId}/${galleryVehicles[2].id}/m2-front.png`,
+      file_name: "bmw-m2-front.png",
+      mime_type: "image/png",
+      file_size_bytes: imageBuffer.length,
+      caption: "BMW M2 Competition",
+      description: "Noch nicht veroeffentlicht — nur fuer den Eigentuemer sichtbar",
+      is_public: false,
+      is_primary: true,
+    },
+  ];
+
+  for (const image of galleryImages) {
+    await supabase.storage
+      .from(VEHICLE_IMAGE_BUCKET)
+      .upload(image.storage_path, imageBuffer, {
+        contentType: image.mime_type,
+        upsert: true,
+      });
+  }
+
+  const { error: upsertGalleryImagesError } = await supabase
+    .from("vehicle_images")
+    .upsert(galleryImages, { onConflict: "id" });
+
+  if (upsertGalleryImagesError) {
+    throw upsertGalleryImagesError;
+  }
+
+  // ── Public comments on published vehicles ────────────────────────────────
+  const publicComments = [
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccc01",
+      vehicle_id: galleryVehicles[0].id,
+      user_id: proUserId,
+      body: "Traumauto! Die 992er Generation hat das beste Design aller Zeiten.",
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccc02",
+      vehicle_id: galleryVehicles[0].id,
+      user_id: freeUserId,
+      body: "Glueckwunsch zum 911er! Wie sind die Unterhaltskosten so?",
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccc03",
+      vehicle_id: galleryVehicles[1].id,
+      user_id: proUserId,
+      body: "Der Golf R ist ein echtes Allround-Talent. Wie faehrt er sich im Alltag?",
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccc04",
+      vehicle_id: "22222222-2222-4222-8222-222222222221", // BMW 320d (Pro User)
+      user_id: galleryUserId,
+      body: "Schoener 3er! M Sport steht dem Wagen gut.",
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccc05",
+      vehicle_id: "22222222-2222-4222-8222-222222222222", // Tesla Model 3 (Pro User)
+      user_id: galleryUserId,
+      body: "Wie ist die Reichweite im Winter? Ueberlege auch auf Elektro umzusteigen.",
+    },
+  ];
+
+  // Delete old public comments for idempotency
+  for (const comment of publicComments) {
+    await supabase.from("public_comments").delete().eq("id", comment.id);
+  }
+
+  const { error: upsertPublicCommentsError } = await supabase
+    .from("public_comments")
+    .upsert(publicComments, { onConflict: "id" });
+
+  if (upsertPublicCommentsError) {
+    throw upsertPublicCommentsError;
+  }
+
+  // ── Image reactions (Heat-Smiley) ────────────────────────────────────────
+  const imageReactions = [
+    { id: "dddddddd-dddd-4ddd-8ddd-dddddddddd01", image_id: galleryImages[0].id, user_id: proUserId, heat_level: 5 },
+    { id: "dddddddd-dddd-4ddd-8ddd-dddddddddd02", image_id: galleryImages[0].id, user_id: freeUserId, heat_level: 4 },
+    { id: "dddddddd-dddd-4ddd-8ddd-dddddddddd03", image_id: galleryImages[1].id, user_id: proUserId, heat_level: 4 },
+    { id: "dddddddd-dddd-4ddd-8ddd-dddddddddd04", image_id: galleryImages[3].id, user_id: proUserId, heat_level: 5 },
+    { id: "dddddddd-dddd-4ddd-8ddd-dddddddddd05", image_id: galleryImages[3].id, user_id: freeUserId, heat_level: 3 },
+    { id: "dddddddd-dddd-4ddd-8ddd-dddddddddd06", image_id: "88888888-8888-4888-8888-000000000002", user_id: galleryUserId, heat_level: 4 }, // BMW seed image
+    { id: "dddddddd-dddd-4ddd-8ddd-dddddddddd07", image_id: "88888888-8888-4888-8888-000000000003", user_id: galleryUserId, heat_level: 3 }, // Tesla seed image
+  ];
+
+  for (const reaction of imageReactions) {
+    await supabase.from("image_reactions").delete().eq("id", reaction.id);
+  }
+
+  const { error: upsertImageReactionsError } = await supabase
+    .from("image_reactions")
+    .upsert(imageReactions, { onConflict: "id" });
+
+  if (upsertImageReactionsError) {
+    throw upsertImageReactionsError;
+  }
+
+  // ── Image comments ───────────────────────────────────────────────────────
+  const imageComments = [
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccc10",
+      vehicle_id: galleryVehicles[0].id,
+      image_id: galleryImages[0].id,
+      user_id: proUserId,
+      body: "Perfektes Licht fuer dieses Foto! Die Farbe kommt super raus.",
+    },
+    {
+      id: "cccccccc-cccc-4ccc-8ccc-cccccccccc11",
+      vehicle_id: galleryVehicles[0].id,
+      image_id: galleryImages[2].id,
+      user_id: freeUserId,
+      body: "Der Innenraum sieht fantastisch aus! Wie ist die Verarbeitung?",
+    },
+  ];
+
+  for (const comment of imageComments) {
+    await supabase.from("public_comments").delete().eq("id", comment.id);
+  }
+
+  const { error: upsertImageCommentsError } = await supabase
+    .from("public_comments")
+    .upsert(imageComments, { onConflict: "id" });
+
+  if (upsertImageCommentsError) {
+    throw upsertImageCommentsError;
+  }
+
+  // ── Basic cost entries for gallery user ──────────────────────────────────
+  const galleryCosts = [
+    {
+      id: "33333333-3333-4333-8333-e00000000001",
+      vehicle_id: galleryVehicles[0].id,
+      user_id: galleryUserId,
+      category: "fuel",
+      title: "Shell V-Power Racing",
+      amount: 142.50,
+      date: "2026-03-15",
+      payment_status: "paid",
+      mileage: 33500,
+      liters: 58.5,
+      price_per_liter: 2.436,
+    },
+    {
+      id: "33333333-3333-4333-8333-e00000000002",
+      vehicle_id: galleryVehicles[0].id,
+      user_id: galleryUserId,
+      category: "insurance",
+      title: "Vollkasko monatlich",
+      amount: 189.00,
+      date: "2026-04-01",
+      payment_status: "paid",
+    },
+    {
+      id: "33333333-3333-4333-8333-e00000000003",
+      vehicle_id: galleryVehicles[1].id,
+      user_id: galleryUserId,
+      category: "fuel",
+      title: "Aral Ultimate 102",
+      amount: 89.30,
+      date: "2026-03-20",
+      payment_status: "paid",
+      mileage: 21800,
+      liters: 42.5,
+      price_per_liter: 2.101,
+    },
+    {
+      id: "33333333-3333-4333-8333-e00000000004",
+      vehicle_id: galleryVehicles[1].id,
+      user_id: galleryUserId,
+      category: "maintenance",
+      title: "Inspektion 20.000 km",
+      amount: 285.00,
+      date: "2026-02-10",
+      payment_status: "paid",
+      mileage: 20100,
+    },
+  ];
+
+  const { error: upsertGalleryCostsError } = await supabase
+    .from("cost_entries")
+    .upsert(galleryCosts, { onConflict: "id" });
+
+  if (upsertGalleryCostsError) {
+    throw upsertGalleryCostsError;
+  }
+}
+
 async function main(): Promise<void> {
   const freeUser = seedUsers[0];
   const proUser = seedUsers[1];
+  const galleryUser = seedUsers[2];
 
-  if (!freeUser || !proUser) {
+  if (!freeUser || !proUser || !galleryUser) {
     throw new Error("Seed-User-Konfiguration ist unvollstaendig.");
   }
 
@@ -1362,15 +1804,19 @@ async function main(): Promise<void> {
 
   const freeUserId = await ensureAuthUser(freeUser);
   const proUserId = await ensureAuthUser(proUser);
+  const galleryUserId = await ensureAuthUser(galleryUser);
 
   await upsertProfile(freeUserId, freeUser);
   await upsertProfile(proUserId, proUser);
+  await upsertProfile(galleryUserId, galleryUser);
 
   await seedDomainData(freeUserId, proUserId);
+  await seedGalleryData(freeUserId, proUserId, galleryUserId);
 
   console.log("Testdaten wurden erfolgreich angelegt/aktualisiert.");
   console.log(`Free User: ${freeUser.email}`);
   console.log(`Pro User: ${proUser.email}`);
+  console.log(`Gallery User: ${galleryUser.email}`);
 }
 
 main().catch((error: unknown) => {

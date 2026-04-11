@@ -5,9 +5,10 @@ import { PreferenceSwitches } from "@/components/PreferenceSwitches";
 import type { Locale, Theme } from "@/lib/preferences";
 import type { UserProfile } from "@/types/domain";
 import { SettingsForm } from "./SettingsForm";
+import { SharingSettingsCard } from "./SharingSettingsCard";
 import { SubscriptionCard } from "./SubscriptionCard";
 
-type SettingsTab = "appearance" | "profile" | "subscription";
+type SettingsTab = "appearance" | "profile" | "subscription" | "sharing";
 
 function Tab({
   active,
@@ -64,6 +65,9 @@ export function SettingsTabs({
         <Tab active={activeTab === "subscription"} onClick={() => handleTab("subscription")}>
           {isDE ? "Nutzungsmodell" : "Subscription"}
         </Tab>
+        <Tab active={activeTab === "sharing"} onClick={() => handleTab("sharing")}>
+          {isDE ? "Galerie & Teilen" : "Gallery & Sharing"}
+        </Tab>
       </div>
 
       {/* Appearance tab */}
@@ -117,6 +121,23 @@ export function SettingsTabs({
             </p>
           </div>
           <SubscriptionCard tier={profile.subscription_tier} locale={locale} />
+        </section>
+      )}
+
+      {/* Sharing tab */}
+      {activeTab === "sharing" && (
+        <section key="sharing" className="section-shell animate-fade-in space-y-4 p-5 sm:p-6">
+          <div>
+            <h2 className="text-lg font-semibold text-foreground">
+              {isDE ? "Galerie & Teilen" : "Gallery & Sharing"}
+            </h2>
+            <p className="mt-1 text-sm help-copy">
+              {isDE
+                ? "Aktiviere die Galerie-Funktion, um veröffentlichte Fahrzeuge anderer Nutzer zu sehen und zu bewerten."
+                : "Enable the gallery feature to see and rate published vehicles from other users."}
+            </p>
+          </div>
+          <SharingSettingsCard sharingEnabled={profile.sharing_enabled} locale={locale} />
         </section>
       )}
     </div>

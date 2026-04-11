@@ -24,7 +24,7 @@
     "test:integration:local": "node --env-file=.env.local --import tsx --test tests/local-supabase.integration.test.ts",
     "predev": "npm run supabase:start",
     "dev": "next dev --turbopack",
-    "prebuild": "npm run supabase:start",
+    "prebuild": "node -e \"const cp=require('node:child_process');const isCi=Boolean(process.env.CI||process.env.VERCEL);if(process.platform==='win32'&&!isCi){cp.execSync('npm run supabase:start',{stdio:'inherit'});}else{console.log('Skipping local Supabase bootstrap for build (CI/Vercel/non-Windows).');}\"",
     "build": "next build",
     "prestart": "npm run supabase:start",
     "start": "next start",

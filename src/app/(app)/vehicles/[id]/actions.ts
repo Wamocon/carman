@@ -805,6 +805,66 @@ export async function setPrimaryVehicleImage(vehicleId: string, imageId: string)
   revalidatePath("/dashboard");
 }
 
+export async function deleteVehicleImage(vehicleId: string, imageId: string) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return { error: "Nicht angemeldet." };
+  }
+
+  const { data: image, error: imageError } = await supabase
+    .from("vehicle_images")
+    .select("id, storage_path, is_primary")
+    .eq("id", imageId)
+    .eq("vehicle_id", vehicleId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (imageError || !image) {
+    return { error: "Bild nicht gefunden." };
+  }
+
+  await supabase.storage.from("vehicle-images").remove([image.storage_path]);
+
+  const { error } = await supabase
+    .from("vehicle_images")
+    .delete()
+    .eq("id", imageId)
+    .eq("user_id", user.id);
+
+  if (error) {
+    return { error: "Bild konnte nicht gelöscht werden." };
+  }
+
+  if (image.is_primary) {
+    const { data: remaining } = await supabase
+      .from("vehicle_images")
+      .select("id")
+      .eq("vehicle_id", vehicleId)
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (remaining) {
+      await supabase
+        .from("vehicle_images")
+        .update({ is_primary: true })
+        .eq("id", remaining.id)
+        .eq("user_id", user.id);
+    }
+  }
+
+  revalidatePath(`/vehicles/${vehicleId}`);
+  revalidatePath("/vehicles");
+  revalidatePath("/dashboard");
+  revalidatePath("/gallery");
+  return { error: null };
+}
+
 export async function createVehicleDocumentRecord(formData: FormData) {
   const vehicleId = (formData.get("vehicle_id") as string) ?? "";
   const storagePath = (formData.get("storage_path") as string) ?? "";

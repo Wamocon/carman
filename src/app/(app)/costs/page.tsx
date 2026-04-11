@@ -210,17 +210,17 @@ export default async function CostsPage(props: {
   // Primary images for vehicle cards
   const { data: primaryImages } = await supabase
     .from("vehicle_images")
-    .select("vehicle_id, storage_path")
+    .select("vehicle_id, storage_path, focal_point_x, focal_point_y")
     .eq("user_id", user.id)
     .eq("is_primary", true);
 
-  const imageRecords = (primaryImages ?? []) as Pick<VehicleImage, "vehicle_id" | "storage_path">[];
+  const imageRecords = (primaryImages ?? []) as Pick<VehicleImage, "vehicle_id" | "storage_path" | "focal_point_x" | "focal_point_y">[];
   const signedImages = await Promise.all(
     imageRecords.map(async (img) => {
       const { data } = await supabase.storage
         .from("vehicle-images")
         .createSignedUrl(img.storage_path, 60 * 30);
-      return [img.vehicle_id, data?.signedUrl ?? null] as const;
+      return [img.vehicle_id, { url: data?.signedUrl ?? null, focalX: img.focal_point_x, focalY: img.focal_point_y }] as const;
     }),
   );
   const primaryImageMap = Object.fromEntries(signedImages);
@@ -300,7 +300,8 @@ export default async function CostsPage(props: {
               const purchasePrice = calculateAcquisitionCost(vehicle);
               const totalOwnership = runningCosts + purchasePrice;
               const categoryBreakdown = categoryBreakdownByVehicle[vehicle.id] ?? {};
-              const imageUrl = primaryImageMap[vehicle.id] ?? undefined;
+              const imageEntry = primaryImageMap[vehicle.id] ?? undefined;
+              const imageUrl = imageEntry?.url;
               const vehicleHref = `/vehicles/${vehicle.id}?tab=costs`;
 
               return (
@@ -312,6 +313,7 @@ export default async function CostsPage(props: {
                         src={imageUrl}
                         alt={`${vehicle.make} ${vehicle.model}`}
                         className="h-36 w-full object-cover"
+                        style={{ objectPosition: `${(imageEntry?.focalX ?? 0.5) * 100}% ${(imageEntry?.focalY ?? 0.5) * 100}%` }}
                       />
                     ) : (
                       <div className="flex h-36 items-center justify-center bg-foreground/5 text-muted">

@@ -49,6 +49,7 @@ export default async function AppLayout({
     driver_license_class: profile.driver_license_class,
     driver_profile_completed: profile.driver_profile_completed,
     subscription_tier: profile.subscription_tier,
+    sharing_enabled: profile.sharing_enabled ?? false,
     created_at: profile.created_at,
     updated_at: profile.updated_at,
   };

@@ -18,6 +18,7 @@ interface UserProfile {
   driver_license_class: string | null;
   driver_profile_completed: boolean;
   subscription_tier: SubscriptionTier;
+  sharing_enabled: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -71,6 +72,10 @@ interface Vehicle {
   license_plate: string;
   current_mileage: number;
   image_url: string | null;
+  is_published: boolean;
+  share_header: boolean;
+  share_details: boolean;
+  share_images: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -129,7 +134,11 @@ interface VehicleImage {
   mime_type: string;
   file_size_bytes: number;
   caption: string | null;
+  description: string | null;
   is_primary: boolean;
+  is_public: boolean;
+  focal_point_x: number;
+  focal_point_y: number;
   created_at: string;
 }
 
@@ -140,7 +149,9 @@ interface VehicleImageInsert {
   mime_type: string;
   file_size_bytes: number;
   caption?: string | null;
+  description?: string | null;
   is_primary?: boolean;
+  is_public?: boolean;
 }
 
 // ---- Cost Entry (fuel, repair, other) -------------------------------------
@@ -319,6 +330,41 @@ interface VehicleDocumentInsert {
   caption?: string | null;
 }
 
+// ---- Public Sharing (Gallery) -----------------------------------------------
+
+type HeatLevel = 1 | 2 | 3 | 4 | 5;
+
+interface PublicComment {
+  id: string;
+  vehicle_id: string;
+  image_id: string | null;
+  user_id: string;
+  body: string;
+  created_at: string;
+  author_display_name?: string | null;
+}
+
+interface PublicCommentInsert {
+  vehicle_id: string;
+  body: string;
+}
+
+interface PublicCommentReaction {
+  id: string;
+  comment_id: string;
+  user_id: string;
+  heat_level: HeatLevel;
+  created_at: string;
+}
+
+interface ImageReaction {
+  id: string;
+  image_id: string;
+  user_id: string;
+  heat_level: HeatLevel;
+  created_at: string;
+}
+
 // ---- Exports ---------------------------------------------------------------
 
 export type {
@@ -352,6 +398,11 @@ export type {
   ReminderInsert,
   MonthlyCostSummary,
   VehicleStats,
+  HeatLevel,
+  PublicComment,
+  PublicCommentInsert,
+  PublicCommentReaction,
+  ImageReaction,
 };
 
 
