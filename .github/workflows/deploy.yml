@@ -52,10 +52,57 @@ jobs:
             echo "vercel_args=" >> $GITHUB_OUTPUT
           fi
 
+  # --- Validate required Vercel env vars ------------------------------------
+  preflight-vercel-env:
+    name: Validate Vercel env configuration
+    needs: set-vars
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate required env vars in Vercel
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+          TARGET_ENV: ${{ needs.set-vars.outputs.vercel_env }}
+        run: |
+          if [[ -z "$VERCEL_PROJECT_ID" ]]; then
+            echo "ERROR: Missing GitHub secret VERCEL_PROJECT_ID"
+            exit 1
+          fi
+
+          API_URL="https://api.vercel.com/v9/projects/${VERCEL_PROJECT_ID}/env?target=${TARGET_ENV}"
+          if [[ -n "$VERCEL_ORG_ID" ]]; then
+            API_URL="${API_URL}&teamId=${VERCEL_ORG_ID}"
+          fi
+
+          curl -sS -H "Authorization: Bearer ${VERCEL_TOKEN}" "$API_URL" -o vercel-env.json
+
+          node -e '
+            const fs = require("node:fs");
+            const required = ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"];
+            const payload = JSON.parse(fs.readFileSync("vercel-env.json", "utf8"));
+
+            if (payload.error) {
+              console.error("Vercel API error:", payload.error.message || payload.error.code || JSON.stringify(payload.error));
+              process.exit(1);
+            }
+
+            const envs = Array.isArray(payload.envs) ? payload.envs : [];
+            const available = new Set(envs.map((entry) => entry.key).filter(Boolean));
+            const missing = required.filter((key) => !available.has(key));
+
+            if (missing.length > 0) {
+              console.error(`Missing required Vercel env vars for target ${process.env.TARGET_ENV}: ${missing.join(", ")}`);
+              process.exit(1);
+            }
+
+            console.log(`Verified Vercel env for ${process.env.TARGET_ENV}: ${required.join(", ")}`);
+          '
+
   # --- Deploy ---------------------------------------------------------------
   deploy:
     name: Deploy to Vercel
-    needs: set-vars
+    needs: [set-vars, preflight-vercel-env]
     uses: Wamocon/github_workflow/.github/workflows/deploy-preview.yml@main
     with:
       vercel_env: ${{ needs.set-vars.outputs.vercel_env }}
